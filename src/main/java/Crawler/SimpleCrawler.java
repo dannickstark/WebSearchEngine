@@ -11,64 +11,84 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SimpleCrawler {
+    private CrawlerThread ct;
+
     ArrayList<String> visited;
-    String hostName;
+    public volatile Queue<String> que;
+    public volatile HashMap<String, Integer> levelMap;
 
     int maxDepth;
     int maxDoc;
     boolean multipleDomain;
+    int threadID;
 
-    public SimpleCrawler(int maxDepth, int maxDoc, boolean multipleDomain, ArrayList<String> visited) {
-        this.maxDepth = maxDepth;
-        this.maxDoc = maxDoc;
-        this.multipleDomain = multipleDomain;
-        this.visited = visited;
+    String hostName;
+
+    public SimpleCrawler(CrawlerThread ct) {
+        this.ct = ct;
+
+        this.threadID = ct.ID;
+        this.maxDepth = ct.crawler.maxDepth;
+        this.maxDoc = ct.crawler.maxDoc;
+        this.multipleDomain = ct.crawler.multipleDomain;
+        this.hostName = ct.crawler.hostName;
+
+        this.que = ct.crawler.que;
+        this.visited = ct.crawler.visited;
+        this.levelMap = ct.crawler.levelMap;
     }
 
-    public void crawl(int level, String url) throws IOException, InterruptedException {
-        if(url == null || url.length() == 0)
-            return;
+    public void crawl() throws IOException, InterruptedException {
+        while (!this.que.isEmpty() && this.visited.size() < this.maxDoc){
+            this.ct.sleep(2000);
 
-        if (level < this.maxDepth && this.visited.size() < this.maxDoc){
+            String url = this.que.poll();
+            if(url == null || url.length() == 0)
+                continue;
+
             url = UrlCleaner.normalizeUrl(url);
 
-            if(level == 1){
-                this.hostName = url.split("/")[2];
-            }
+            int currentLevel = this.levelMap.get(url);
+            if(currentLevel < this.maxDepth){
+                System.out.println("[" + this.threadID + "] Visiting (Level " + currentLevel + "): " + url);
+                this.visited.add(url);
 
-            System.out.println("Visiting: " + url);
+                ArrayList<String> nextLinks = visitPage(url);
+                System.out.println("[" + this.threadID + "] ===> Collecting links in the page");
 
-            ArrayList<String> nextLinks = visitLink(url);
-            if(nextLinks != null){
-                for(String link : nextLinks){
-                    var newLink = UrlCleaner.normalizeUrl(link);
+                if(nextLinks != null){
+                    for(String link : nextLinks){
+                        var newLink = UrlCleaner.normalizeUrl(link);
 
-                    if(!this.multipleDomain){
-                        String patternString = "https://?((W|w){3}.)?([a-zA-Z0-9]+\\.)?" + hostName + "(/.*)?";
-                        Pattern pattern = Pattern.compile(patternString);
+                        if(!this.multipleDomain){
+                            String patternString = "https://?((W|w){3}.)?([a-zA-Z0-9]+\\.)?" + hostName + "(/.*)?";
+                            Pattern pattern = Pattern.compile(patternString);
 
-                        Matcher matcher = pattern.matcher(newLink);
-                        boolean matches = matcher.matches();
+                            Matcher matcher = pattern.matcher(newLink);
+                            boolean matches = matcher.matches();
 
-                        if(!matches) continue;
-                    }
+                            if(!matches) continue;
+                        }
 
-                    if(!visited.contains(newLink)){
-                        //Thread.sleep(1000);
-                        crawl(level++, newLink);
+                        if(!visited.contains(newLink)){
+                            this.que.add(newLink);
+                            this.levelMap.put(newLink, currentLevel + 1);
+                        }
                     }
                 }
             }
         }
     }
 
-    public ArrayList<String> visitLink(String path){
+    public ArrayList<String> visitPage(String path){
         try {
-            this.visited.add(path);
 
             // Create a new JTidy instance and set options
             Tidy tidy = new Tidy();
@@ -95,7 +115,7 @@ public class SimpleCrawler {
             int code = connection.getResponseCode();
             if (code==200)
             {
-                System.out.println("===> Connection established");
+                System.out.println("[" + this.threadID + "] ===> Connection established");
                 Document doc = tidy.parseDOM(url.openStream(), null);
                 var docx = doc.toString();
 
@@ -111,7 +131,7 @@ public class SimpleCrawler {
                 }
                 return urls;
             } else {
-                System.out.println("Not accessible : " + path);
+                System.out.println("[" + this.threadID + "] ===> Not accessible : " + path);
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();

@@ -1,6 +1,11 @@
 package Crawler;
 
+import com.shekhargulati.urlcleaner.UrlCleaner;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Crawler {
     ArrayList<String> urlSet;
@@ -8,7 +13,11 @@ public class Crawler {
     int maxDoc;
     boolean multipleDomain;
 
-    private volatile ArrayList<String> visited = new ArrayList<>();
+    public volatile ArrayList<String> visited;
+    public volatile Queue<String> que;
+    public volatile HashMap<String, Integer> levelMap;
+
+    public String hostName;
 
     public Crawler(ArrayList<String> urlSet, int maxDepth, int maxDoc, boolean multipleDomain){
         this.urlSet = urlSet;
@@ -16,15 +25,25 @@ public class Crawler {
         this.maxDoc = maxDoc;
         this.multipleDomain = multipleDomain;
 
+        this.visited = new ArrayList<>();
+        this.que = new LinkedList<>(urlSet);
+        this.levelMap = new HashMap<>();
+
         this.work();
     }
 
     public void work(){
+        this.hostName = UrlCleaner.normalizeUrl(this.urlSet.get(0)).split("/")[2];
+
+        for(String link : this.urlSet){
+            this.levelMap.put(UrlCleaner.normalizeUrl(link), 1);
+        }
+
         ArrayList<CrawlerThread> bots = new ArrayList<>();
 
-        for(String url : this.urlSet){
-            bots.add(new CrawlerThread(1, url, this.maxDepth, this.maxDoc, this.multipleDomain, this.visited));
-        }
+        bots.add(new CrawlerThread(1, this));
+        bots.add(new CrawlerThread(2, this));
+        bots.add(new CrawlerThread(3, this));
 
         for(CrawlerThread c : bots){
             try {
@@ -33,5 +52,11 @@ public class Crawler {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void saveState(){
+        System.out.println(que);
+        System.out.println(visited);
+        System.out.println(levelMap);
     }
 }

@@ -5,17 +5,17 @@ import java.util.ArrayList;
 
 public class CrawlerThread implements Runnable
 {
-    private int ID;
-    String url;
+    public int ID;
+    public Crawler crawler;
 
     private Thread thread;
     private SimpleCrawler simpleCrawler;
 
-    public CrawlerThread(int i, String url, int maxDepth, int maxDoc, boolean multipleDomain, ArrayList<String> visited){
+    public CrawlerThread(int i, Crawler crawler){
         this.ID = i;
-        this.url = url;
+        this.crawler = crawler;
 
-        this.simpleCrawler = new SimpleCrawler(maxDepth, maxDoc, multipleDomain, visited);
+        this.simpleCrawler = new SimpleCrawler(this);
 
         this.thread = new Thread(this);
         this.thread.start();
@@ -24,7 +24,7 @@ public class CrawlerThread implements Runnable
     @Override
     public void run() {
         try {
-            simpleCrawler.crawl(1, this.url);
+            simpleCrawler.crawl();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -32,5 +32,9 @@ public class CrawlerThread implements Runnable
 
     public Thread getThread(){
         return this.thread;
+    }
+
+    public void sleep(int i) throws InterruptedException {
+        Thread.sleep(i);
     }
 }
