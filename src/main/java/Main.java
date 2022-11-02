@@ -9,9 +9,9 @@ public class Main {
 
     public static void main(String[] args){
         ArrayList<String> testURLS = new ArrayList<>();
-        testURLS.add("https://www.w3schools.com/");
-        testURLS.add("https://campus.w3schools.com");
-        testURLS.add("https://shop.w3schools.com");
+        testURLS.add("cs.uni-kl.de");
+        testURLS.add("https://www.cs.uni-kl.de/studium");
+        testURLS.add("https://www.cs.uni-kl.de/organisation");
 
         Crawler cr = new Crawler(testURLS, 5, 10, false);
     }
