@@ -1,10 +1,12 @@
 package Crawler;
 
+import Indexer.Indexer;
 import com.shekhargulati.urlcleaner.UrlCleaner;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 
+import javax.xml.transform.TransformerException;
 import javax.xml.xpath.*;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -19,6 +21,7 @@ import java.util.regex.Pattern;
 
 public class SimpleCrawler {
     private CrawlerThread ct;
+    private Indexer indexer;
 
     ArrayList<String> visited;
     public volatile Queue<String> que;
@@ -32,6 +35,8 @@ public class SimpleCrawler {
     String hostName;
 
     public SimpleCrawler(CrawlerThread ct) {
+        this.indexer = new Indexer();
+
         this.ct = ct;
 
         this.threadID = ct.ID;
@@ -49,37 +54,37 @@ public class SimpleCrawler {
         while (!this.que.isEmpty() && this.visited.size() < this.maxDoc){
             this.ct.sleep(2000);
 
-            String url = this.que.poll();
-            if(url == null || url.length() == 0)
+            String url;
+            synchronized (this.ct.o1){
+                url = this.que.poll();
+            }
+            if(!checkLink(url))
                 continue;
 
             url = UrlCleaner.normalizeUrl(url);
 
-            int currentLevel = this.levelMap.get(url);
-            if(currentLevel < this.maxDepth){
-                System.out.println("[" + this.threadID + "] Visiting (Level " + currentLevel + "): " + url);
-                this.visited.add(url);
+            //Check if that page was visited before
+            if(!visited.contains(url)){
+                int currentLevel = this.levelMap.get(url);
 
-                ArrayList<String> nextLinks = visitPage(url);
-                System.out.println("[" + this.threadID + "] ===> Collecting links in the page");
+                if(currentLevel < this.maxDepth){
+                    synchronized (this.ct.o2) {
+                        this.visited.add(url);
+                    }
 
-                if(nextLinks != null){
-                    for(String link : nextLinks){
-                        var newLink = UrlCleaner.normalizeUrl(link);
+                    System.out.println("[" + this.threadID + "] Visiting (Level " + currentLevel + "): " + url);
 
-                        if(!this.multipleDomain){
-                            String patternString = "https://?((W|w){3}.)?([a-zA-Z0-9]+\\.)?" + hostName + "(/.*)?";
-                            Pattern pattern = Pattern.compile(patternString);
+                    ArrayList<String> nextLinks = visitPage(url);
+                    System.out.println("[" + this.threadID + "] ===> Collecting links in the page");
 
-                            Matcher matcher = pattern.matcher(newLink);
-                            boolean matches = matcher.matches();
-
-                            if(!matches) continue;
-                        }
-
-                        if(!visited.contains(newLink)){
-                            this.que.add(newLink);
-                            this.levelMap.put(newLink, currentLevel + 1);
+                    if(nextLinks != null){
+                        for(String newLink : nextLinks){
+                            if(!visited.contains(newLink)){
+                                synchronized (this.ct.o3){
+                                    this.que.add(newLink);
+                                    this.levelMap.put(newLink, currentLevel + 1);
+                                }
+                            }
                         }
                     }
                 }
@@ -89,7 +94,6 @@ public class SimpleCrawler {
 
     public ArrayList<String> visitPage(String path){
         try {
-
             // Create a new JTidy instance and set options
             Tidy tidy = new Tidy();
             tidy.setInputEncoding("UTF-8");
@@ -119,7 +123,7 @@ public class SimpleCrawler {
                 Document doc = tidy.parseDOM(url.openStream(), null);
                 var docx = doc.toString();
 
-                // Use XPath to obtain whatever you want from the (X)HTML
+                // Use XPath to obtain all links
                 XPath xpath = XPathFactory.newInstance().newXPath();
                 XPathExpression expr = xpath.compile("//a[starts-with(@href, 'https')]/@href");
                 NodeList nodes = (NodeList)expr.evaluate(doc, XPathConstants.NODESET);
@@ -127,8 +131,15 @@ public class SimpleCrawler {
                 ArrayList<String> urls = new ArrayList<>();
                 for(int i=0;i<nodes.getLength();i++)
                 {
-                    urls.add(nodes.item(i).getNodeValue());
+                    String link = UrlCleaner.normalizeUrl(nodes.item(i).getNodeValue());
+
+                    if(checkLink(link)){
+                        urls.add(link);
+                    }
                 }
+
+                //Index the page
+                indexer.index(path, doc, urls);
                 return urls;
             } else {
                 System.out.println("[" + this.threadID + "] ===> Not accessible : " + path);
@@ -139,7 +150,25 @@ public class SimpleCrawler {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (TransformerException e) {
+            e.printStackTrace();
         }
         return null;
+    }
+
+    public Boolean checkLink(String link){
+        if(link == null || link.length() == 0)
+            return false;
+
+        if(!this.multipleDomain){
+            String patternString = "https://?((W|w){3}.)?([a-zA-Z0-9]+\\.)?" + hostName + "(/.*)?";
+            Pattern pattern = Pattern.compile(patternString);
+
+            Matcher matcher = pattern.matcher(link);
+            boolean matches = matcher.matches();
+
+            if(!matches) return false;
+        }
+        return true;
     }
 }
