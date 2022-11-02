@@ -13,6 +13,6 @@ public class Main {
         testURLS.add("https://campus.w3schools.com");
         testURLS.add("https://shop.w3schools.com");
 
-        Crawler cr = new Crawler(testURLS, 5, 50, false);
+        Crawler cr = new Crawler(testURLS, 5, 10, false);
     }
 }
