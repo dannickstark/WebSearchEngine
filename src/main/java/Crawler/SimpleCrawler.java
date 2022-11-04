@@ -55,7 +55,7 @@ public class SimpleCrawler {
             this.ct.sleep(2000);
 
             String url;
-            synchronized (this.ct.o1){
+            synchronized (this.ct.crawler.o1){
                 url = this.que.poll();
             }
             if(!checkLink(url))
@@ -68,8 +68,9 @@ public class SimpleCrawler {
                 int currentLevel = this.levelMap.get(url);
 
                 if(currentLevel < this.maxDepth){
-                    synchronized (this.ct.o2) {
+                    synchronized (this.ct.crawler.o2) {
                         this.visited.add(url);
+                        this.ct.crawler.db.updateUrl(url);
                     }
 
                     System.out.println("[" + this.threadID + "] Visiting (Level " + currentLevel + "): " + url);
@@ -80,9 +81,10 @@ public class SimpleCrawler {
                     if(nextLinks != null){
                         for(String newLink : nextLinks){
                             if(!visited.contains(newLink)){
-                                synchronized (this.ct.o3){
+                                synchronized (this.ct.crawler.o3){
                                     this.que.add(newLink);
                                     this.levelMap.put(newLink, currentLevel + 1);
+                                    this.ct.crawler.db.addUrl(newLink);
                                 }
                             }
                         }

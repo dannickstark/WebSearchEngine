@@ -1,5 +1,9 @@
 package Crawler;
 
+import DB.*;
+import DB.Entities.GlobalVarEntity;
+import DB.Entities.LinkEntity;
+import DB.Entities.UrlEntity;
 import com.shekhargulati.urlcleaner.UrlCleaner;
 
 import java.util.ArrayList;
@@ -8,6 +12,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Crawler {
+    public DB db;
+
     ArrayList<String> urlSet;
     int maxDepth;
     int maxDoc;
@@ -19,20 +25,43 @@ public class Crawler {
 
     public String hostName;
 
+    public volatile Object o1, o2, o3, o4, o5;
+
     public Crawler(ArrayList<String> urlSet, int maxDepth, int maxDoc, boolean multipleDomain){
+        db = new DB(DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
+
         this.urlSet = urlSet;
         this.maxDepth = maxDepth;
         this.maxDoc = maxDoc;
         this.multipleDomain = multipleDomain;
 
         this.visited = new ArrayList<>();
-        this.que = new LinkedList<>(urlSet);
         this.levelMap = new HashMap<>();
+
+        o1 = new Object();
+        o2 = new Object();
+        o3 = new Object();
+        o4 = new Object();
+        o5 = new Object();
 
         this.work();
     }
 
     public void work(){
+        if (checkState().equals("Interrupted")) {
+            ArrayList<UrlEntity> links = db.getUrls(db.selectTable("urls"));
+
+            for(UrlEntity l : links){
+                if(l.visited){
+                    this.visited.add(l.url);
+                } else {
+                    this.que.add(l.url);
+                }
+            }
+        } else {
+            this.que = new LinkedList<>(urlSet);
+        }
+
         this.hostName = UrlCleaner.normalizeUrl(this.urlSet.get(0)).split("/")[2];
 
         for(String link : this.urlSet){
@@ -52,6 +81,22 @@ public class Crawler {
                 e.printStackTrace();
             }
         }
+
+        changeState("Finished");
+        System.out.println("Crawling finished successfully");
+    }
+
+    private void changeState(String state) {
+        db.insert_globalVar("crawlerState", state);
+    }
+
+    private String checkState() {
+        ArrayList<GlobalVarEntity> varList = db.getGlobalVars(db.searchByAtt("globalvars", "name", "crawlerState"));
+
+        if(varList.size() > 0){
+            return varList.get(0).content;
+        }
+        return "Empty";
     }
 
     public void saveState(){

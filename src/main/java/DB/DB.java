@@ -1,9 +1,6 @@
 package DB;
 
-import DB.Entities.DocumentEntity;
-import DB.Entities.FeatureEntity;
-import DB.Entities.GlobalVarEntity;
-import DB.Entities.LinkEntity;
+import DB.Entities.*;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -83,12 +80,30 @@ public class DB {
     // =================================================== Help functions
     // =========== TRUNCATE
     public void truncateTable(String tableName){
-        Statement statement;
-        try{
-            statement = conn.createStatement();
-            int result = statement.executeUpdate("TRUNCATE " + tableName + " CASCADE");
+        try {
+            if(checkIfTableExist(tableName)){
+                Statement statement;
+                try{
+                    statement = conn.createStatement();
+                    int result = statement.executeUpdate("TRUNCATE " + tableName + " CASCADE");
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
+            }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+        }
+    }
+    // =========== DROP
+    public void deleteTable(String table_name){
+        Statement statement;
+        try {
+            String query= String.format("drop table %s",table_name);
+            statement=conn.createStatement();
+            statement.executeUpdate(query);
+            System.out.println("Table Deleted");
+        }catch (Exception e){
+            System.out.println(e);
         }
     }
     // =========== INSERT
@@ -122,13 +137,30 @@ public class DB {
         return executeUpdateQuery(query);
     }
 
+    public Integer insert_globalVar(String name, String content) {
+        String query = String.format(
+                "insert into globalvars (name, content) values('%s', '%s');",
+                name, content
+        );
+        return executeUpdateQuery(query);
+    }
+
+    public Integer insert_url(String url, Boolean visited) {
+        String vis = (visited ? "TRUE" : "FALSE");
+        String query = String.format(
+                "insert into urls (url, visited) values('%s', %s);",
+                url, vis
+        );
+        return executeUpdateQuery(query);
+    }
+
     // =========== SELECT
     public ResultSet selectTable(String table_name) {
         String query = String.format("select * from %s", table_name);
         return executePutQuery(query);
     }
 
-    public ResultSet searchByAtt(String table_name, String att, int val){
+    public ResultSet searchByAtt(String table_name, String att, Object val){
         String query=String.format("select * from %s where %s = %s",table_name, att, val);
         return executePutQuery(query);
     }
@@ -138,22 +170,32 @@ public class DB {
         return executePutQuery(query);
     }
 
+    public ResultSet searchByAtt_(String table_name, String att, String val){
+        String query=String.format("select * from %s where %s %s",table_name, att, val);
+        return executePutQuery(query);
+    }
+
     // ====================================== UPDATE
+    public void updateEntityByKey_(String table_name, String keyName, String keyVal, String att,String val){
+        String query=String.format("update %s set %s=%s where %s=%s",table_name,att,val,keyName,keyVal);
+        executeUpdateQuery(query);
+    }
+
     public void updateEntityByKey(String table_name, String keyName, String keyVal, String att,String val){
         String query=String.format("update %s set %s='%s' where %s='%s'",table_name,att,val,keyName,keyVal);
         executeUpdateQuery(query);
     }
 
-    public void updateEntityByKey(String table_name, String keyName, String keyVal, String att,int val){
+    public void updateEntityByKey(String table_name, String keyName, String keyVal, String att,Object val){
         String query=String.format("update %s set %s=%s where %s='%s'",table_name,att,val,keyName,keyVal);
         executeUpdateQuery(query);
     }
-    public void updateEntityByKey(String table_name, String keyName, int keyVal, String att,String val){
+    public void updateEntityByKey(String table_name, String keyName, Object keyVal, String att,String val){
         String query=String.format("update %s set %s='%s' where %s=%s",table_name,att,val,keyName,keyVal);
         executeUpdateQuery(query);
     }
 
-    public void updateEntityByKey(String table_name, String keyName, int keyVal, String att,int val){
+    public void updateEntityByKey(String table_name, String keyName, Object keyVal, String att,Object val){
         String query=String.format("update %s set %s=%s where %s=%s",table_name,att,val,keyName,keyVal);
         executeUpdateQuery(query);
     }
@@ -210,7 +252,8 @@ public class DB {
                 result.add(new LinkEntity(
                         rs.getInt("linkid"),
                         rs.getInt("from_docid"),
-                        rs.getInt("to_docid")
+                        rs.getInt("to_docid"),
+                        rs.getString("url")
                 ));
             }
         } catch (SQLException throwables) {
@@ -221,7 +264,6 @@ public class DB {
 
     public ArrayList<GlobalVarEntity> getGlobalVars(ResultSet rs){
         ArrayList<GlobalVarEntity> result = new ArrayList<>();
-
         if(rs == null)
             return result;
 
@@ -229,8 +271,8 @@ public class DB {
             while(rs.next()){
                 result.add(new GlobalVarEntity(
                         rs.getInt("varid"),
-                        rs.getString("key"),
-                        rs.getString("value")
+                        rs.getString("name"),
+                        rs.getString("content")
                 ));
             }
         } catch (SQLException throwables) {
@@ -239,5 +281,35 @@ public class DB {
         return result;
     }
 
+    public ArrayList<UrlEntity> getUrls(ResultSet rs){
+        ArrayList<UrlEntity> result = new ArrayList<>();
+        if(rs == null)
+            return result;
 
+        try {
+            while(rs.next()){
+                result.add(new UrlEntity(
+                        rs.getInt("urlid"),
+                        rs.getString("url"),
+                        rs.getBoolean("visited")
+                ));
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return result;
+    }
+
+    // =================== HELP FUNCTIONS
+    public void addUrl(String url){
+        insert_url(url, false);
+    }
+
+    public void updateUrl(String url){
+        if(getUrls(searchByAtt("urls", "url", url)).size() > 0){
+            updateEntityByKey_("urls", "visited", "TRUE", "url", "'" + url + "'");
+        } else {
+            insert_url(url, true);
+        }
+    }
 }

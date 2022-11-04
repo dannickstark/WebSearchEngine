@@ -11,19 +11,30 @@ public class Migration {
     }
 
     public void migrate() throws SQLException {
-        resetTable();
+        //resetTables();
+        dropTables();
 
         createTable_documents() ;
         createTable_features();
         createTable_links();
         createTable_globalVars();
+        createTable_urls();
     }
 
-    public void resetTable(){
+    public void resetTables(){
         db.truncateTable("links");
         db.truncateTable("features");
         db.truncateTable("documents");
         db.truncateTable("globalvars");
+        db.truncateTable("urls");
+    }
+
+    public void dropTables(){
+        db.deleteTable("links");
+        db.deleteTable("features");
+        db.deleteTable("documents");
+        db.deleteTable("globalvars");
+        db.deleteTable("urls");
     }
 
     public Integer createTable_documents() throws SQLException {
@@ -79,13 +90,29 @@ public class Migration {
         return null;
     }
 
+    public Integer createTable_urls() throws SQLException {
+        if(!db.checkIfTableExist("urls")){
+            String query="""
+                        create table urls (
+                            urlid SERIAL, 
+                            url varchar(200) UNIQUE NOT NULL, 
+                            visited BOOLEAN NOT NULL DEFAULT TRUE,
+                            primary key(urlid)
+                        );
+                    """;
+
+            return db.executeUpdateQuery(query);
+        }
+        return null;
+    }
+
     public Integer createTable_globalVars() throws SQLException {
         if(!db.checkIfTableExist("globalvars")){
             String query="""
                         create table globalvars (
                             varid SERIAL, 
-                            key varchar(200) NOT NULL, 
-                            value varchar(200) NOT NULL, 
+                            name varchar(200) NOT NULL, 
+                            content varchar(200) NOT NULL, 
                             primary key(varid)
                         );
                     """;

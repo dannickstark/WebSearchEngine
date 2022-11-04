@@ -2,12 +2,12 @@ package DB.Entities;
 
 public class GlobalVarEntity {
     public Integer varid;
-    public String key;
-    public String value;
+    public String name;
+    public String content;
 
-    public GlobalVarEntity(Integer varid, String key, String value){
+    public GlobalVarEntity(Integer varid, String name, String content){
         this.varid = varid;
-        this.key = key;
-        this.value = value;
+        this.name = name;
+        this.content = content;
     }
 }
