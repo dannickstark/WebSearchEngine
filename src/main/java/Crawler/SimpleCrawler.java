@@ -58,7 +58,7 @@ public class SimpleCrawler {
             synchronized (this.ct.crawler.o1){
                 url = this.que.poll();
             }
-            if(!checkLink(url))
+            if(!checkLink(url, null))
                 continue;
 
             url = UrlCleaner.normalizeUrl(url);
@@ -70,7 +70,9 @@ public class SimpleCrawler {
                 if(currentLevel < this.maxDepth){
                     synchronized (this.ct.crawler.o2) {
                         this.visited.add(url);
-                        this.ct.crawler.db.updateUrl(url);
+                        synchronized (this.ct.crawler.db){
+                            this.ct.crawler.db.updateUrl(url);
+                        }
                     }
 
                     System.out.println("[" + this.threadID + "] Visiting (Level " + currentLevel + "): " + url);
@@ -80,11 +82,16 @@ public class SimpleCrawler {
 
                     if(nextLinks != null){
                         for(String newLink : nextLinks){
-                            if(!visited.contains(newLink)){
-                                synchronized (this.ct.crawler.o3){
-                                    this.que.add(newLink);
-                                    this.levelMap.put(newLink, currentLevel + 1);
-                                    this.ct.crawler.db.addUrl(newLink);
+                            synchronized (this.ct.crawler.o3){
+                                if(!visited.contains(newLink)){
+                                    if(!que.contains(newLink)){
+                                        this.que.add(newLink);
+                                        this.levelMap.put(newLink, currentLevel + 1);
+
+                                        synchronized (this.ct.crawler.db) {
+                                            this.ct.crawler.db.addUrl(newLink);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -135,7 +142,7 @@ public class SimpleCrawler {
                 {
                     String link = UrlCleaner.normalizeUrl(nodes.item(i).getNodeValue());
 
-                    if(checkLink(link)){
+                    if(checkLink(link, path)){
                         urls.add(link);
                     }
                 }
@@ -158,8 +165,11 @@ public class SimpleCrawler {
         return null;
     }
 
-    public Boolean checkLink(String link){
+    public Boolean checkLink(String link, String linkOrigin){
         if(link == null || link.length() == 0)
+            return false;
+
+        if(linkOrigin == link)
             return false;
 
         if(!this.multipleDomain){

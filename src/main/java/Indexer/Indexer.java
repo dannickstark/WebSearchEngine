@@ -29,7 +29,6 @@ public class Indexer {
 
     public Indexer(){
         db = new DB(DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
-        TextManipulator.loadStopWords();
         freqOfWords = new HashMap<>();
     }
 
@@ -65,6 +64,10 @@ public class Indexer {
         // Save links
         // --- Save outgoing links
         for (String link : outgoingLinks) {
+            // skip the same link
+            if(link == url)
+                continue;
+
             // get target document
             var tmpList = db.getDocuments(db.searchByAtt("documents", "url", link));
             if(tmpList.size() > 0){

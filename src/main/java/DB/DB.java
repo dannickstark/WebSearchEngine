@@ -1,15 +1,19 @@
 package DB;
 
 import DB.Entities.*;
+import Indexer.TextManipulator;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class DB {
     private Connection conn = null;
     private String dbName;
 
     public DB(String dbName, String user, String pass) {
+        TextManipulator.loadStopWords();
+
         this.dbName = dbName;
         this.connect(user, pass);
     }
@@ -55,8 +59,7 @@ public class DB {
             try (ResultSet rs = statement.getGeneratedKeys()) {
                 if (rs.next()) {
                     return rs.getInt(1);
-                }
-                else {
+                } else {
                     throw new SQLException("Operation failed, no ID obtained.");
                 }
             }
@@ -79,11 +82,11 @@ public class DB {
 
     // =================================================== Help functions
     // =========== TRUNCATE
-    public void truncateTable(String tableName){
+    public void truncateTable(String tableName) {
         try {
-            if(checkIfTableExist(tableName)){
+            if (checkIfTableExist(tableName)) {
                 Statement statement;
-                try{
+                try {
                     statement = conn.createStatement();
                     int result = statement.executeUpdate("TRUNCATE " + tableName + " CASCADE");
                 } catch (SQLException throwables) {
@@ -94,18 +97,20 @@ public class DB {
             throwables.printStackTrace();
         }
     }
+
     // =========== DROP
-    public void deleteTable(String table_name){
+    public void deleteTable(String table_name) {
         Statement statement;
         try {
-            String query= String.format("drop table %s",table_name);
-            statement=conn.createStatement();
+            String query = String.format("drop table %s", table_name);
+            statement = conn.createStatement();
             statement.executeUpdate(query);
             System.out.println("Table Deleted");
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
+
     // =========== INSERT
     public Integer insert_document(String url) {
         String query = String.format("insert into documents(url) values('%s');", url);
@@ -160,55 +165,56 @@ public class DB {
         return executePutQuery(query);
     }
 
-    public ResultSet searchByAtt(String table_name, String att, Object val){
-        String query=String.format("select * from %s where %s = %s",table_name, att, val);
+    public ResultSet searchByAtt(String table_name, String att, Object val) {
+        String query = String.format("select * from %s where %s = %s", table_name, att, val);
         return executePutQuery(query);
     }
 
-    public ResultSet searchByAtt(String table_name, String att, String val){
-        String query=String.format("select * from %s where %s = '%s'",table_name, att, val);
+    public ResultSet searchByAtt(String table_name, String att, String val) {
+        String query = String.format("select * from %s where %s = '%s'", table_name, att, val);
         return executePutQuery(query);
     }
 
-    public ResultSet searchByAtt_(String table_name, String att, String val){
-        String query=String.format("select * from %s where %s %s",table_name, att, val);
+    public ResultSet searchByAtt_(String table_name, String att, String val) {
+        String query = String.format("select * from %s where %s %s", table_name, att, val);
         return executePutQuery(query);
     }
 
     // ====================================== UPDATE
-    public void updateEntityByKey_(String table_name, String keyName, String keyVal, String att,String val){
-        String query=String.format("update %s set %s=%s where %s=%s",table_name,att,val,keyName,keyVal);
+    public void updateEntityByKey_(String table_name, String keyName, String keyVal, String att, String val) {
+        String query = String.format("update %s set %s=%s where %s=%s", table_name, att, val, keyName, keyVal);
         executeUpdateQuery(query);
     }
 
-    public void updateEntityByKey(String table_name, String keyName, String keyVal, String att,String val){
-        String query=String.format("update %s set %s='%s' where %s='%s'",table_name,att,val,keyName,keyVal);
+    public void updateEntityByKey(String table_name, String keyName, String keyVal, String att, String val) {
+        String query = String.format("update %s set %s='%s' where %s='%s'", table_name, att, val, keyName, keyVal);
         executeUpdateQuery(query);
     }
 
-    public void updateEntityByKey(String table_name, String keyName, String keyVal, String att,Object val){
-        String query=String.format("update %s set %s=%s where %s='%s'",table_name,att,val,keyName,keyVal);
-        executeUpdateQuery(query);
-    }
-    public void updateEntityByKey(String table_name, String keyName, Object keyVal, String att,String val){
-        String query=String.format("update %s set %s='%s' where %s=%s",table_name,att,val,keyName,keyVal);
+    public void updateEntityByKey(String table_name, String keyName, String keyVal, String att, Object val) {
+        String query = String.format("update %s set %s=%s where %s='%s'", table_name, att, val, keyName, keyVal);
         executeUpdateQuery(query);
     }
 
-    public void updateEntityByKey(String table_name, String keyName, Object keyVal, String att,Object val){
-        String query=String.format("update %s set %s=%s where %s=%s",table_name,att,val,keyName,keyVal);
+    public void updateEntityByKey(String table_name, String keyName, Object keyVal, String att, String val) {
+        String query = String.format("update %s set %s='%s' where %s=%s", table_name, att, val, keyName, keyVal);
+        executeUpdateQuery(query);
+    }
+
+    public void updateEntityByKey(String table_name, String keyName, Object keyVal, String att, Object val) {
+        String query = String.format("update %s set %s=%s where %s=%s", table_name, att, val, keyName, keyVal);
         executeUpdateQuery(query);
     }
 
     // ======================================= CONVERT
-    public ArrayList<DocumentEntity> getDocuments(ResultSet rs){
+    public ArrayList<DocumentEntity> getDocuments(ResultSet rs) {
         ArrayList<DocumentEntity> result = new ArrayList<>();
 
-        if(rs == null)
+        if (rs == null)
             return result;
 
         try {
-            while(rs.next()){
+            while (rs.next()) {
                 result.add(new DocumentEntity(
                         rs.getInt("docid"),
                         rs.getString("url")
@@ -220,19 +226,22 @@ public class DB {
         return result;
     }
 
-    public ArrayList<FeatureEntity> getFeatures(ResultSet rs){
+    public ArrayList<FeatureEntity> getFeatures(ResultSet rs) {
         ArrayList<FeatureEntity> result = new ArrayList<>();
 
-        if(rs == null)
+        if (rs == null)
             return result;
 
         try {
-            while(rs.next()){
+            while (rs.next()) {
                 result.add(new FeatureEntity(
                         rs.getInt("featid"),
                         rs.getInt("docid"),
                         rs.getString("term"),
-                        rs.getInt("term_frequency")
+                        rs.getDouble("term_frequency"),
+                        rs.getDouble("tf"),
+                        rs.getDouble("idf"),
+                        rs.getDouble("score")
                 ));
             }
         } catch (SQLException throwables) {
@@ -241,14 +250,14 @@ public class DB {
         return result;
     }
 
-    public ArrayList<LinkEntity> getLinks(ResultSet rs){
+    public ArrayList<LinkEntity> getLinks(ResultSet rs) {
         ArrayList<LinkEntity> result = new ArrayList<>();
 
-        if(rs == null)
+        if (rs == null)
             return result;
 
         try {
-            while(rs.next()){
+            while (rs.next()) {
                 result.add(new LinkEntity(
                         rs.getInt("linkid"),
                         rs.getInt("from_docid"),
@@ -262,13 +271,13 @@ public class DB {
         return result;
     }
 
-    public ArrayList<GlobalVarEntity> getGlobalVars(ResultSet rs){
+    public ArrayList<GlobalVarEntity> getGlobalVars(ResultSet rs) {
         ArrayList<GlobalVarEntity> result = new ArrayList<>();
-        if(rs == null)
+        if (rs == null)
             return result;
 
         try {
-            while(rs.next()){
+            while (rs.next()) {
                 result.add(new GlobalVarEntity(
                         rs.getInt("varid"),
                         rs.getString("name"),
@@ -281,13 +290,13 @@ public class DB {
         return result;
     }
 
-    public ArrayList<UrlEntity> getUrls(ResultSet rs){
+    public ArrayList<UrlEntity> getUrls(ResultSet rs) {
         ArrayList<UrlEntity> result = new ArrayList<>();
-        if(rs == null)
+        if (rs == null)
             return result;
 
         try {
-            while(rs.next()){
+            while (rs.next()) {
                 result.add(new UrlEntity(
                         rs.getInt("urlid"),
                         rs.getString("url"),
@@ -300,16 +309,112 @@ public class DB {
         return result;
     }
 
+    public ArrayList<SearchResult> getSearchResult(ResultSet rs) {
+        ArrayList<SearchResult> result = new ArrayList<>();
+        if (rs == null)
+            return result;
+
+        try {
+            while (rs.next()) {
+                result.add(new SearchResult(
+                        rs.getInt("docid"),
+                        rs.getDouble("agScore")
+                ));
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return result;
+    }
+
     // =================== HELP FUNCTIONS
-    public void addUrl(String url){
+    public void addUrl(String url) {
         insert_url(url, false);
     }
 
-    public void updateUrl(String url){
-        if(getUrls(searchByAtt("urls", "url", url)).size() > 0){
-            updateEntityByKey_("urls", "visited", "TRUE", "url", "'" + url + "'");
+    public void updateUrl(String url) {
+        var urls = getUrls(searchByAtt("urls", "url", url));
+        if (urls.size() > 0) {
+            updateEntityByKey_("urls", "url", "'" + url + "'", "visited", "TRUE");
         } else {
             insert_url(url, true);
         }
+    }
+
+    public void calculateTF_IDF() {
+        String query = String.format("""
+                     WITH tfs as (
+                     	select term, 1 + LOG(term_frequency) tf
+                     	from features
+                     ), docfs as (
+                     	select term, COUNT(DISTINCT docid) docs
+                     	from features
+                     	GROUP BY term
+                     	ORDER BY term
+                     ), totalDocs as (
+                     	select COUNT(DISTINCT docid)
+                     	from documents
+                     ), idfs as (
+                     	select f.term, LOG(ttds.count / df.docs) idf
+                     	from features f, docfs df, totalDocs ttds
+                     	WHERE f.term = df.term
+                     )
+                     
+                     update features
+                     set tf = tfs.tf, idf = idfs.idf, score = tfs.tf * idfs.idf
+                     FROM tfs, idfs
+                     WHERE features.term = tfs.term
+                     	AND features.term = idfs.term;
+                """);
+        executeUpdateQuery(query);
+    }
+
+    public ResultSet conjunctiveSearch(String queryTerms, int k){
+        String query = String.format("""
+                WITH docsTerms as (
+                	select docid,  array_agg(term)::text[] as terms
+                	from features
+                	GROUP BY docid
+                )
+                                
+                select f.docid, SUM(f.score) agScore
+                from features f, docsTerms dt
+                where f.docid = dt.docid
+                	AND dt.terms @> string_to_array('%s', ' ')
+                GROUP BY f.docid
+                ORDER BY agScore
+                LIMIT %s;
+                """, queryTerms, k);
+        return executePutQuery(query);
+    }
+
+    public ResultSet disjunctiveSearch(String queryTerms, int k){
+        String query = String.format("""
+                select docid, SUM(score) agScore
+                from features
+                where term = ANY(string_to_array('%s', ' '))
+                GROUP BY docid
+                ORDER BY agScore
+                LIMIT %s;
+                """, queryTerms, k);
+        return executePutQuery(query);
+    }
+
+    public ArrayList<SearchResult> search(String queryTerms, int k, String mode){
+        // split words
+        List<String> words = TextManipulator.splitWords(queryTerms);
+        // convert to lowercase
+        words = TextManipulator.convertToLower(words);
+        // remove stop words
+        words = TextManipulator.removeStopWords(words);
+        // stemming
+        List<String> stemmedWords = TextManipulator.stemming(words);
+        // construct new query
+        String newQueryTerms = String.join(" ", stemmedWords);
+
+        if(mode == "conjunctive"){
+            return getSearchResult(conjunctiveSearch(newQueryTerms, k));
+        }
+        return getSearchResult(disjunctiveSearch(newQueryTerms, k));
     }
 }

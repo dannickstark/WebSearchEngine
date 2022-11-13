@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class TextManipulator {
     protected static List<String> stopWords;
 
-    protected static void loadStopWords() {
+    public static void loadStopWords() {
         try{
             BufferedReader reader = new BufferedReader(new FileReader("stopwords.txt"));
             stopWords = new Vector<String>();

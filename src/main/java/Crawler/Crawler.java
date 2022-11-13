@@ -12,7 +12,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Crawler {
-    public DB db;
+    public volatile DB db;
 
     ArrayList<String> urlSet;
     int maxDepth;
@@ -48,17 +48,21 @@ public class Crawler {
     }
 
     public void work(){
-        if (checkState().equals("Interrupted")) {
-            ArrayList<UrlEntity> links = db.getUrls(db.selectTable("urls"));
+        String oldState = checkState();
 
-            for(UrlEntity l : links){
-                if(l.visited){
-                    this.visited.add(l.url);
-                } else {
+        ArrayList<UrlEntity> links = db.getUrls(db.selectTable("urls"));
+
+        for(UrlEntity l : links){
+            if(l.visited){
+                this.visited.add(l.url);
+            } else {
+                if(oldState.equals("Interrupted")){
                     this.que.add(l.url);
                 }
             }
-        } else {
+        }
+
+        if (!oldState.equals("Interrupted")) {
             this.que = new LinkedList<>(urlSet);
         }
 
@@ -84,6 +88,10 @@ public class Crawler {
 
         changeState("Finished");
         System.out.println("Crawling finished successfully");
+
+        // Calculate the TF*IDF Score
+        System.out.println("Starting to compute the TF*IDF Score");
+        db.calculateTF_IDF();
     }
 
     private void changeState(String state) {
@@ -97,11 +105,5 @@ public class Crawler {
             return varList.get(0).content;
         }
         return "Empty";
-    }
-
-    public void saveState(){
-        System.out.println(que);
-        System.out.println(visited);
-        System.out.println(levelMap);
     }
 }

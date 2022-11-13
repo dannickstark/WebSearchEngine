@@ -61,6 +61,9 @@ public class Migration {
                             docid integer NOT NULL, 
                             term varchar(200) NOT NULL, 
                             term_frequency integer DEFAULT 1,
+                            tf double precision,
+                            idf double precision,
+                            score double precision,
                             primary key(featid),
                             foreign key(docid) references documents
                         );
