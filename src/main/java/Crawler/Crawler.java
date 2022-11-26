@@ -53,11 +53,11 @@ public class Crawler {
         ArrayList<UrlEntity> links = db.getUrls(db.selectTable("urls"));
 
         for(UrlEntity l : links){
-            if(l.visited){
-                this.visited.add(l.url);
+            if(l.getVisited()){
+                this.visited.add(l.getUrl());
             } else {
                 if(oldState.equals("Interrupted")){
-                    this.que.add(l.url);
+                    this.que.add(l.getUrl());
                 }
             }
         }
@@ -102,7 +102,7 @@ public class Crawler {
         ArrayList<GlobalVarEntity> varList = db.getGlobalVars(db.searchByAtt("globalvars", "name", "crawlerState"));
 
         if(varList.size() > 0){
-            return varList.get(0).content;
+            return varList.get(0).getContent();
         }
         return "Empty";
     }

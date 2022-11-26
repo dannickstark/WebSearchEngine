@@ -1,13 +1,13 @@
 package DB.Entities;
 
 public class FeatureEntity {
-    public Integer featid;
-    public Integer docid;
-    public String term;
-    public Double term_frequency;
-    public Double tf;
-    public Double idf;
-    public Double score;
+    private Integer featid;
+    private Integer docid;
+    private String term;
+    private Double term_frequency;
+    private Double tf;
+    private Double idf;
+    private Double score;
 
     public FeatureEntity(Integer featid, Integer docid, String term, Double term_frequency, Double tf, Double idf, Double score){
         this.featid = featid;
@@ -17,5 +17,33 @@ public class FeatureEntity {
         this.tf = tf;
         this.idf = idf;
         this.score = score;
+    }
+
+    public Integer getDocid() {
+        return docid;
+    }
+
+    public Double getIdf() {
+        return idf;
+    }
+
+    public Double getScore() {
+        return score;
+    }
+
+    public Double getTerm_frequency() {
+        return term_frequency;
+    }
+
+    public Double getTf() {
+        return tf;
+    }
+
+    public Integer getFeatid() {
+        return featid;
+    }
+
+    public String getTerm() {
+        return term;
     }
 }

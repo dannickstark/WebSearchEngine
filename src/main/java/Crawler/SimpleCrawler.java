@@ -78,9 +78,10 @@ public class SimpleCrawler {
                     System.out.println("[" + this.threadID + "] Visiting (Level " + currentLevel + "): " + url);
 
                     ArrayList<String> nextLinks = visitPage(url);
-                    System.out.println("[" + this.threadID + "] ===> Collecting links in the page");
 
                     if(nextLinks != null){
+                        System.out.println("[" + this.threadID + "] ===> Collecting links in the page");
+
                         for(String newLink : nextLinks){
                             synchronized (this.ct.crawler.o3){
                                 if(!visited.contains(newLink)){
@@ -130,7 +131,6 @@ public class SimpleCrawler {
             {
                 System.out.println("[" + this.threadID + "] ===> Connection established");
                 Document doc = tidy.parseDOM(url.openStream(), null);
-                var docx = doc.toString();
 
                 // Use XPath to obtain all links
                 XPath xpath = XPathFactory.newInstance().newXPath();
@@ -160,6 +160,8 @@ public class SimpleCrawler {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (TransformerException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;

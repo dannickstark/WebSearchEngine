@@ -112,8 +112,10 @@ public class DB {
     }
 
     // =========== INSERT
-    public Integer insert_document(String url) {
-        String query = String.format("insert into documents(url) values('%s');", url);
+    public Integer insert_document(String url, String title, String description) {
+        String query = String.format("insert into documents(url, title, description) values('%s', '%s', '%s');",
+                url, title, description
+        );
         return executeUpdateQuery(query);
     }
 
@@ -217,7 +219,9 @@ public class DB {
             while (rs.next()) {
                 result.add(new DocumentEntity(
                         rs.getInt("docid"),
-                        rs.getString("url")
+                        rs.getString("url"),
+                        rs.getString("title"),
+                        rs.getString("description")
                 ));
             }
         } catch (SQLException throwables) {

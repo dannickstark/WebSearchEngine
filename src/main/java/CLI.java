@@ -44,10 +44,10 @@ public class CLI {
     }
 
     public void showResult(int index, SearchResult result){
-        ArrayList<DocumentEntity> docs = db.getDocuments(db.searchByAtt("documents", "docid", result.docid));
+        ArrayList<DocumentEntity> docs = db.getDocuments(db.searchByAtt("documents", "docid", result.getDocid()));
 
         if(docs.size() > 0){
-            System.out.printf("[%s] - %s - (Score: %s)%n", (index + 1), docs.get(0).url, result.agScore);
+            System.out.printf("[%s] - %s - (Score: %s)%n", (index + 1), docs.get(0).getUrl(), result.getAgScore());
         }
     }
 

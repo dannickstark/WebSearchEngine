@@ -16,10 +16,13 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.*;
 import java.io.*;
+import java.util.HashMap;
 
 public class Parser {
 
-    public static String parse(Document doc) throws XPathExpressionException, TransformerException {
+    public static HashMap<String, String> parse(Document doc) throws XPathExpressionException, TransformerException {
+        HashMap<String, String> parsedDoc = new HashMap<>();
+
         String docCode = "";
 
         // Use XPath to obtain all links
@@ -27,7 +30,7 @@ public class Parser {
 
         XPathExpression expr = xpath.compile("//title[text()]");
         String title = (String)expr.evaluate(doc, XPathConstants.STRING);
-        docCode = title;
+        parsedDoc.put("title", title);
 
         XPathExpression expr2 = xpath.compile("//body");
         Node body = (Node)expr2.evaluate(doc, XPathConstants.NODE);
@@ -49,8 +52,10 @@ public class Parser {
             }
         }
 
-        //docCode = title + " " + getOuterXml(body);
-        return docCode;
+        parsedDoc.put("description", docCode.substring(0, Math.min(docCode.length(), 100)));
+        docCode = title + " " + docCode;
+        parsedDoc.put("doc", docCode);
+        return parsedDoc;
     }
 
     public static Document transformToDocument(Node doc){

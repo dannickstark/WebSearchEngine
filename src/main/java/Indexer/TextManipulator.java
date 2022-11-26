@@ -1,9 +1,7 @@
 package Indexer;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -14,7 +12,9 @@ public class TextManipulator {
 
     public static void loadStopWords() {
         try{
-            BufferedReader reader = new BufferedReader(new FileReader("stopwords.txt"));
+            InputStream is = TextManipulator.class.getClassLoader().getResourceAsStream("stopwords.txt");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
             stopWords = new Vector<String>();
             String word;
             while ((word = reader.readLine()) != null) {

@@ -34,7 +34,8 @@ public class Indexer {
 
     public void index(String url, Document doc, ArrayList<String> outgoingLinks) throws XPathExpressionException, TransformerException {
         // 1- parse html
-        String parsedText = Parser.parse(doc);
+        HashMap<String, String> parsedDoc = Parser.parse(doc);
+                String parsedText = parsedDoc.get("doc");
         // 2- split words
         List<String> words = TextManipulator.splitWords(parsedText);
         // 3-get indices of each word
@@ -53,7 +54,7 @@ public class Indexer {
         //buildInvertedIndex(stemmedWords, fileName, invertedIndex);
 
         // Save document
-        Integer docEnID = db.insert_document(url);
+        Integer docEnID = db.insert_document(url, parsedDoc.get("title"), parsedDoc.get("description"));
         //DocumentEntity docEn = db.getDocuments(db.searchByAtt("documents", "url", url)).get(0);
         // Save terms
         HashMap<String, Integer> termsFreqs = freqOfWords.get(url);
@@ -72,7 +73,7 @@ public class Indexer {
             var tmpList = db.getDocuments(db.searchByAtt("documents", "url", link));
             if(tmpList.size() > 0){
                 DocumentEntity targetDoc = tmpList.get(0);
-                db.insert_link(docEnID, targetDoc.docid, link);
+                db.insert_link(docEnID, targetDoc.getDocid(), link);
             } else {
                 db.insert_link(docEnID, link);
             }
@@ -80,7 +81,7 @@ public class Indexer {
         // --- Update ingoing link
         ArrayList<LinkEntity> ingoingLinks = db.getLinks(db.searchByAtt("links", "url", url));
         for (LinkEntity linkEn : ingoingLinks) {
-            db.updateEntityByKey("links", "linkid", linkEn.linkid, "to_docid", docEnID);
+            db.updateEntityByKey("links", "linkid", linkEn.getLinkid(), "to_docid", docEnID);
         }
     }
 
