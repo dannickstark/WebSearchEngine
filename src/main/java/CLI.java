@@ -17,17 +17,19 @@ public class CLI {
     }
 
     public void work(){
-        askQuery();
-
         Scanner in = new Scanner(System.in);
+
+        askQuery();
         String query = in.nextLine();
 
-        ArrayList<SearchResult> results = db.search(query, 5, null);
+        ArrayList<SearchResult> results = db.search(query, 5);
 
         for(int i=0; i < results.size(); i++){
             SearchResult res = results.get(i);
             showResult(i, res);
         }
+
+        work();
     }
 
     public void showWelcome(){
@@ -44,11 +46,7 @@ public class CLI {
     }
 
     public void showResult(int index, SearchResult result){
-        ArrayList<DocumentEntity> docs = db.getDocuments(db.searchByAtt("documents", "docid", result.getDocid()));
-
-        if(docs.size() > 0){
-            System.out.printf("[%s] - %s - (Score: %s)%n", (index + 1), docs.get(0).getUrl(), result.getAgScore());
-        }
+        System.out.printf("[%s] - %s - (Score: %s)%n", (index + 1), result.getUrl(), result.getAgScore());
     }
 
     public static void main(String[] args){

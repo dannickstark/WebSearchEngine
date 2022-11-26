@@ -6,6 +6,9 @@ import Indexer.TextManipulator;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class DB {
     private Connection conn = null;
@@ -322,6 +325,9 @@ public class DB {
             while (rs.next()) {
                 result.add(new SearchResult(
                         rs.getInt("docid"),
+                        rs.getString("url"),
+                        rs.getString("title"),
+                        rs.getString("description"),
                         rs.getDouble("agScore")
                 ));
             }
@@ -373,7 +379,7 @@ public class DB {
         executeUpdateQuery(query);
     }
 
-    public ResultSet conjunctiveSearch(String queryTerms, int k){
+    public ResultSet conjunctiveSearch(String queryTerms, Object k){
         String query = String.format("""
                 WITH docsTerms as (
                 	select docid,  array_agg(term)::text[] as terms
@@ -381,30 +387,111 @@ public class DB {
                 	GROUP BY docid
                 )
                                 
-                select f.docid, SUM(f.score) agScore
-                from features f, docsTerms dt
-                where f.docid = dt.docid
-                	AND dt.terms @> string_to_array('%s', ' ')
-                GROUP BY f.docid
-                ORDER BY agScore
+                select d.*, SUM(f.score) agScore
+                from features f, docsTerms dt, documents d
+                where dt.terms @> string_to_array('%s', ' ')
+                    AND f.docid = dt.docid
+                    AND f.docid = d.docid
+                    AND f.term = ANY(string_to_array('%s', ' '))
+                GROUP BY d.docid
+                ORDER BY agScore desc
                 LIMIT %s;
-                """, queryTerms, k);
+                """, queryTerms, queryTerms, k);
         return executePutQuery(query);
     }
 
-    public ResultSet disjunctiveSearch(String queryTerms, int k){
+    public ResultSet disjunctiveSearch(String queryTerms, Object k){
         String query = String.format("""
-                select docid, SUM(score) agScore
-                from features
-                where term = ANY(string_to_array('%s', ' '))
-                GROUP BY docid
-                ORDER BY agScore
+                select d.*, SUM(f.score) agScore
+                from features f, documents d
+                where f.term = ANY(string_to_array('%s', ' '))
+                    AND f.docid = d.docid
+                GROUP BY d.docid
+                ORDER BY agScore desc
                 LIMIT %s;
                 """, queryTerms, k);
         return executePutQuery(query);
     }
 
-    public ArrayList<SearchResult> search(String queryTerms, int k, String mode){
+    public ArrayList<SearchResult> search(String queryTerms, int k){
+        // get and remove site operator
+        String urlRegex = "^\\s*site:(https?:\\/\\/)?(www.)?([^\\s]*)\\s+(.+)";
+        Pattern pattern = Pattern.compile(urlRegex);
+        Matcher matcher = pattern.matcher(queryTerms);
+
+        String siteUrl = null;
+        if (matcher.find()){
+            siteUrl = matcher.group(3);
+            queryTerms = matcher.group(4);
+        }
+
+        // get and remove quotations
+        String quoteRegex = "\\\"[^\\\"]*\\\"";
+        Pattern pattern2 = Pattern.compile(quoteRegex);
+        Matcher matcher2 = pattern2.matcher(queryTerms);
+
+        String quotedQueries = null;
+        if (matcher2.find()){
+            quotedQueries = "";
+
+            for (int i = 0; i <= matcher2.groupCount(); i++) {
+                String quote = matcher2.group(i);
+                quotedQueries += quote;
+                queryTerms = queryTerms.replaceAll(quote, "");
+            }
+        }
+
+        // Search for conjunctive
+        ArrayList<SearchResult> resultsCon = new ArrayList<>();
+        if(quotedQueries != null){
+            resultsCon = searchNext(quotedQueries, "null", "conjunctive");
+        }
+
+        // Search for disjunctive
+        ArrayList<SearchResult> resultsDis = searchNext(queryTerms, "null", null);
+
+        // Filter the lists
+        if(siteUrl != null){
+            String finalSiteUrl = siteUrl;
+            resultsCon = (ArrayList<SearchResult>) resultsCon.stream()
+                    .filter(res -> res.getUrl().contains(finalSiteUrl)).collect(Collectors.toList());
+            resultsDis = (ArrayList<SearchResult>) resultsDis.stream()
+                    .filter(res -> res.getUrl().contains(finalSiteUrl)).collect(Collectors.toList());
+        }
+
+        // Join the two lists
+        ArrayList<SearchResult> results = new ArrayList<>();
+
+        if(resultsCon.size() == 0){
+            results = resultsDis;
+        } else if(resultsDis.size() == 0){
+            results = resultsCon;
+        } else {
+            for(SearchResult srDis : resultsDis){
+                for(SearchResult srCon : resultsCon){
+                    if(srDis.getDocid() == srCon.getDocid()){
+                        srDis.setAgScore(srDis.getAgScore() + srCon.getAgScore());
+                        results.add(srDis);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Get k first results
+        if(k < results.size()){
+            ArrayList<SearchResult> finalResults = new ArrayList<>();
+
+            for(int i=0; i < k; i++){
+                finalResults.add(results.get(i));
+            }
+            return finalResults;
+        } else {
+            return results;
+        }
+    }
+
+    public ArrayList<SearchResult> searchNext(String queryTerms, Object k, String mode){
         // split words
         List<String> words = TextManipulator.splitWords(queryTerms);
         // convert to lowercase
@@ -416,9 +503,14 @@ public class DB {
         // construct new query
         String newQueryTerms = String.join(" ", stemmedWords);
 
+        ArrayList<SearchResult> results = new ArrayList<>();
+
         if(mode == "conjunctive"){
-            return getSearchResult(conjunctiveSearch(newQueryTerms, k));
+            results = getSearchResult(conjunctiveSearch(newQueryTerms, k));
+        } else {
+            results = getSearchResult(disjunctiveSearch(newQueryTerms, k));
         }
-        return getSearchResult(disjunctiveSearch(newQueryTerms, k));
+
+        return results;
     }
 }

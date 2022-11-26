@@ -6,7 +6,7 @@
 <%@ include file="sections/header.jsp" %>
 <nav class="navbar navbar-expand-md fixed-top navbar-light bg-light">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/"><img src="images/logo.png" height="45"></a>
+        <a class="navbar-brand" href="/"><img src="./images/logo.png" height="45"></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -20,7 +20,7 @@
                 </li>
             </ul>
             <form action="/search" class="d-flex">
-                <input name="q" class="form-control" type="search" placeholder="Search" aria-label="Search">
+                <input name="q" value="<c:out value="${query}"></c:out>" class="form-control" type="search" placeholder="Search" aria-label="Search">
                 <button class="btn btn-outline-success" type="submit">Search</button>
             </form>
         </div>
@@ -28,6 +28,10 @@
 </nav>
 
 <main class="container mt-5 mb-5 pt-5">
+    <p><small>
+        About <c:out value="${results.size()}"></c:out> result(s)
+        (<c:out value="${elapsedTime}"></c:out> seconds)
+    </small></p>
     <ul class="list-group list-group-flush">
         <c:forEach items="${results}" var="result">
             <li class="list-group-item">

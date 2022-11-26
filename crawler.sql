@@ -5,11 +5,12 @@ Select *
 from features
 ORDER BY term;
 
-select docid, SUM(score) agScore
-from features
-where term = ANY(ARRAY['bewerbung', 'ander', 'bietet', 'bildet'])
-GROUP BY docid
-ORDER BY agScore
+select d.*, SUM(f.score) agScore
+from features f, documents d
+where f.term = ANY(string_to_array('bewerbung ander bietet bildet', ' '))
+	AND f.docid = d.docid
+GROUP BY d.docid
+ORDER BY agScore desc
 LIMIT 5;
 
 WITH docsTerms as (
@@ -18,11 +19,11 @@ WITH docsTerms as (
 	GROUP BY docid
 )
 
-select f.docid, SUM(f.score) agScore
-from features f, docsTerms dt
-where f.docid = dt.docid
-	AND dt.terms @> string_to_array('bewerbung ander')
-GROUP BY f.docid
+select d.*, SUM(f.score) agScore
+from features f, docsTerms dt, documents d
+where dt.terms @> string_to_array('bewerbung ander', ' ')
+	AND f.docid = dt.docid
+GROUP BY d.docid
 ORDER BY agScore
 LIMIT 5;
 
