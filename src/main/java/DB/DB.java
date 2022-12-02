@@ -324,6 +324,7 @@ public class DB {
         try {
             while (rs.next()) {
                 result.add(new SearchResult(
+                        result.size() + 1,
                         rs.getInt("docid"),
                         rs.getString("url"),
                         rs.getString("title"),
@@ -413,7 +414,7 @@ public class DB {
         return executePutQuery(query);
     }
 
-    public ArrayList<SearchResult> search(String queryTerms, int k){
+    public ArrayList<SearchResult> search(String queryTerms, Integer k){
         // get and remove site operator
         String urlRegex = "^\\s*site:(https?:\\/\\/)?(www.)?([^\\s]*)\\s+(.+)";
         Pattern pattern = Pattern.compile(urlRegex);
@@ -479,7 +480,7 @@ public class DB {
         }
 
         // Get k first results
-        if(k < results.size()){
+        if(k != null && k < results.size()){
             ArrayList<SearchResult> finalResults = new ArrayList<>();
 
             for(int i=0; i < k; i++){
