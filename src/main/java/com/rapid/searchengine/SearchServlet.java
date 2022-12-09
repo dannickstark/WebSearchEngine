@@ -23,7 +23,8 @@ public class SearchServlet extends HttpServlet {
         String query = request.getParameter("q");
 
         long startTime = System.nanoTime();
-        ArrayList<SearchResult> results = db.search(query, 20);
+        Recolter rec = db.search(query, 20);
+        ArrayList<SearchResult> results = rec.results;
         long estimatedTime = System.nanoTime() - startTime;
         long elapsedTime = estimatedTime / 1000000000;
 

@@ -3,6 +3,7 @@ package com.rapid.searchengine;
 import DB.*;
 import DB.Entities.ApiResponse;
 import DB.Entities.SearchResult;
+import DB.Entities.StatsEntity;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import jakarta.servlet.*;
@@ -32,9 +33,13 @@ public class ApiServlet extends HttpServlet {
             max = Integer.parseInt(k);
         }
 
-        ArrayList<SearchResult> results = db.search(query, max);
+        Recolter rec = db.search(query, max);
+        ArrayList<SearchResult> results = rec.results;
+        ArrayList<StatsEntity> statsResults = rec.statsResults;
 
-        ApiResponse apiR = new ApiResponse(results, query, max);
+        Integer cw = db.getNumberOfTerms();
+
+        ApiResponse apiR = new ApiResponse(results, query, max, statsResults, cw);
         String resultsJsonString = gson.toJson(apiR);
 
         PrintWriter out = response.getWriter();

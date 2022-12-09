@@ -22,7 +22,8 @@ public class CLI {
         askQuery();
         String query = in.nextLine();
 
-        ArrayList<SearchResult> results = db.search(query, 5);
+        Recolter rec = db.search(query, 5);
+        ArrayList<SearchResult> results = rec.results;
 
         for(int i=0; i < results.size(); i++){
             SearchResult res = results.get(i);

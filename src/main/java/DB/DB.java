@@ -6,6 +6,7 @@ import Indexer.TextManipulator;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -338,6 +339,24 @@ public class DB {
         return result;
     }
 
+    public ArrayList<StatsEntity> getStats(ResultSet rs) {
+        ArrayList<StatsEntity> result = new ArrayList<>();
+        if (rs == null)
+            return result;
+
+        try {
+            while (rs.next()) {
+                result.add(new StatsEntity(
+                        rs.getString("term"),
+                        rs.getInt("df")
+                ));
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return result;
+    }
+
     // =================== HELP FUNCTIONS
     public void addUrl(String url) {
         insert_url(url, false);
@@ -414,7 +433,53 @@ public class DB {
         return executePutQuery(query);
     }
 
-    public ArrayList<SearchResult> search(String queryTerms, Integer k){
+    public ResultSet conjunctiveStats(String queryTerms){
+        String query = String.format("""
+                WITH docsTerms as (
+                	select docid,  array_agg(term)::text[] as terms
+                	from features
+                	GROUP BY docid
+                )
+                                
+                select f.term, SUM(f.docid) df
+                from features f, docsTerms dt
+                where dt.terms @> string_to_array('%s', ' ')
+                    AND f.docid = dt.docid
+                    AND f.term = ANY(string_to_array('%s', ' '))
+                GROUP BY f.term
+                ORDER BY term;
+                """, queryTerms);
+        return executePutQuery(query);
+    }
+
+    public ResultSet disjunctiveStats(String queryTerms){
+        String query = String.format("""
+                select term, SUM(docid) df
+                from features
+                where term = ANY(string_to_array('%s', ' '))
+                GROUP BY term
+                ORDER BY term;
+                """, queryTerms);
+        return executePutQuery(query);
+    }
+
+    public Integer getNumberOfTerms(){
+        String query = String.format("""
+                Select COUNT(DISTINCT term)
+                from features;
+                """);
+        ResultSet rs =  executePutQuery(query);
+
+        try {
+            if (!rs.next()) return 0;
+            return rs.getInt("count");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public Recolter search(String queryTerms, Integer k){
         // get and remove site operator
         String urlRegex = "^\\s*site:(https?:\\/\\/)?(www.)?([^\\s]*)\\s+(.+)";
         Pattern pattern = Pattern.compile(urlRegex);
@@ -442,14 +507,42 @@ public class DB {
             }
         }
 
-        // Search for conjunctive
         ArrayList<SearchResult> resultsCon = new ArrayList<>();
+        ArrayList<SearchResult> resultsDis = new ArrayList<>();
+        ArrayList<StatsEntity> statsCon = new ArrayList<>();
+        ArrayList<StatsEntity> statsDis = new ArrayList<>();
+
+        Recolter recCon;
+        // Search for conjunctive
         if(quotedQueries != null){
-            resultsCon = searchNext(quotedQueries, "null", "conjunctive");
+            recCon = searchNext(quotedQueries, "null", "conjunctive");
+            resultsCon = recCon.results;
+            statsCon = recCon.statsResults;
         }
 
         // Search for disjunctive
-        ArrayList<SearchResult> resultsDis = searchNext(queryTerms, "null", null);
+        Recolter recDis = searchNext(queryTerms, "null", null);
+        resultsDis = recDis.results;
+        statsDis = recDis.statsResults;
+
+        // Merge the stats
+        ArrayList<StatsEntity> finalStats = new ArrayList<>(statsCon);
+
+        for(StatsEntity stat : statsDis){
+            Boolean already = false;
+
+            for(StatsEntity stat2 : statsCon){
+                if(stat2.getTerm().equals(stat.getTerm())){
+                    stat.setDf(stat.getDf() + stat2.getDf());
+                    already = true;
+                    continue;
+                }
+            }
+
+            if(!already){
+                finalStats.add(stat);
+            }
+        }
 
         // Filter the lists
         if(siteUrl != null){
@@ -486,13 +579,13 @@ public class DB {
             for(int i=0; i < k; i++){
                 finalResults.add(results.get(i));
             }
-            return finalResults;
+            return new Recolter(finalResults, finalStats);
         } else {
-            return results;
+            return new Recolter(results, finalStats);
         }
     }
 
-    public ArrayList<SearchResult> searchNext(String queryTerms, Object k, String mode){
+    public Recolter searchNext(String queryTerms, Object k, String mode){
         // split words
         List<String> words = TextManipulator.splitWords(queryTerms);
         // convert to lowercase
@@ -505,13 +598,17 @@ public class DB {
         String newQueryTerms = String.join(" ", stemmedWords);
 
         ArrayList<SearchResult> results = new ArrayList<>();
+        ArrayList<StatsEntity> statsResults = new ArrayList<>();
 
         if(mode == "conjunctive"){
             results = getSearchResult(conjunctiveSearch(newQueryTerms, k));
+            statsResults = getStats(conjunctiveStats(newQueryTerms));
         } else {
             results = getSearchResult(disjunctiveSearch(newQueryTerms, k));
+            statsResults = getStats(disjunctiveStats(newQueryTerms));
         }
 
-        return results;
+        return new Recolter(results, statsResults);
     }
+
 }
