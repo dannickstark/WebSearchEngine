@@ -22,6 +22,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.5.0'
 
+    // https://mvnrepository.com/artifact/com.github.jtidy/jtidy
     implementation 'com.github.jtidy:jtidy:1.0.2'
 
     // https://mvnrepository.com/artifact/com.shekhargulati.urlcleaner/urlcleaner
