@@ -20,7 +20,7 @@ public class ApiServlet extends HttpServlet {
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public void init() {
-        db = new DB(DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
+        db = new DB(DBVars.dbPort, DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
     }
 
     @Override

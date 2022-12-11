@@ -2,19 +2,19 @@ package DB.Entities;
 
 public class SearchResult extends DocumentEntity{
     private Integer rank;
-    private Double agScore;
+    private Double score;
 
-    public SearchResult(Integer rank, Integer docid, String url, String title, String description, Double agScore){
+    public SearchResult(Integer rank, Integer docid, String url, String title, String description, Double score){
         super(docid, url, title, description);
         this.rank = rank;
-        this.agScore = agScore;
+        this.score = score;
     }
 
-    public Double getAgScore() {
-        return agScore;
+    public Double getScore() {
+        return score;
     }
 
-    public void setAgScore(Double agScore) {
-        this.agScore = agScore;
+    public void setScore(Double score) {
+        this.score = score;
     }
 }

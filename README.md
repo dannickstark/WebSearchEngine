@@ -1,92 +1,180 @@
 # group-01
 
+<div align= >
 
+# <img align=center width=50px height=50px src="https://media0.giphy.com/media/CVrs76nnBvU7azfTLj/giphy.gif?cid=ecf05e47om1y68g5als66xi5mn32ui6gk2g8wpnv145ag265&rid=giphy.gif&ct=s"> Rapide
 
-## Getting started
+</div>
+<p align="center">
+   <img align="center" height="250px"  src="./repos/screenshot.png" alt="screenshot">
+</p>
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+<p align="center"> 
+    <br> 
+</p>
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## <img align= center width=50px height=50px src="https://thumbs.gfycat.com/HeftyDescriptiveChimneyswift-size_restricted.gif"> Table of Contents
 
-## Add your files
+- <a href ="#about"> 📙 Overview</a>
+- <a href ="#Started"> 💻 Get Started</a>
+- <a href ="#Work"> 🧱 Search Engine Modules </a>
+- <a href ="#Video"> 📽 Demo</a>
+<hr style="background-color: #4b4c60"></hr>
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+<a id = "about"></a>
+
+## <img align="center"  height =50px src="https://user-images.githubusercontent.com/71986226/154076110-1233d7a8-92c2-4d79-82c1-30e278aa518a.gif"> Overview
+
+<ul>
+<li> The aim of this project is to develop a simple Crawler- based search engine that demonstrates the main features of a search engine
+and the interaction between them.</li>
+<li> The main features of a search engine</li>
+<ul>
+<li> Web Crawling</li>
+<li> Indexing</li> 
+<li> Ranking</li>
+</ul>
+<br>
+<li> Built using <a href="https://en.wikipedia.org/wiki/Java_(programming_language)">Java lnaguage</a>.</li>
+<li>  Web interface  for  Search Engine  using <a href="https://en.wikipedia.org/wiki/HTML">Html</a> & <a href="https://en.wikipedia.org/wiki/CSS">CSS</a> & <a href="https://en.wikipedia.org/wiki/JavaScript">JS</a>.</li>
+
+<li> Built using <a href="https://en.wikipedia.org/wiki/PostgreSQL">Postgresql</a>.</li>
+</ul>
+<hr style="background-color: #4b4c60"></hr>
+<a id = "Started"></a>
+
+## <img  align= center width=50px height=50px src="https://c.tenor.com/HgX89Yku5V4AAAAi/to-the-moon.gif"> Get Started
+
+<ol>
+<li>Clone the repository.
+
+<br>
 
 ```
-cd existing_repo
-git remote add origin https://git.cs.uni-kl.de/dbis/is-project-22/group-01.git
-git branch -M main
-git push -uf origin main
+git clone https://git.cs.uni-kl.de/dbis/is-project-22/group-01.git
 ```
 
-## Integrate with your tools
+</li>
+<li> You will need to download and install <a href="https://www.oracle.com/java/technologies/downloads/">Jdk</a>. </li>
 
-- [ ] [Set up project integrations](https://git.cs.uni-kl.de/dbis/is-project-22/group-01/-/settings/integrations)
+<li> You will need to download <a href="https://tomcat.apache.org/download-10.cgi">Tomcat</a>. </li>
 
-## Collaborate with your team
+<li> You will need to download and install <a href="https://www.pgadmin.org/download/">pgAdmin</a>. 
+  <ul>
+    <li>Note the default port you choosed</li>
+  </ul>
+</li>
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+<li>Open the cloned folder with IntelliJ</li>
 
-## Test and Deploy
+<li>Use Gradle to install all the dependencies</li>
 
-Use the built-in continuous integration in GitLab.
+<li>
+  Create a database in pgAdmin
+  <ul>
+    <li>Note the name and the password you defined</li>
+  </ul>
+</li>
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+<li>Go to IntelliJ and edit the file
+<br>
 
-***
+```
+/src/main/java/DB/DBVars.java
+```
+</li>
 
-# Editing this README
+<li>
+Do the migration. It will Create all the tables.
+<br>Go to
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```
+/src/main/java/DB/Migrator.java
+```
+and run it.
+</li>
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+<li>To run the Crawler, goto the following file and run it
 
-## Name
-Choose a self-explaining name for your project.
+```
+/src/main/java/Crawling.java
+```
+</li>
+</ol>
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+<br>
+<hr style="background-color: #4b4c60"></hr>
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## How to run the CLI
+Run:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```
+/src/main/java/CLI.java
+```
+<br>
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+<br>
+<hr style="background-color: #4b4c60"></hr>
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## How to run the Tomcat Server
+Use the following <a href="https://www.jetbrains.com/help/idea/run-debug-configuration-tomcat-server.html">instructions</a> for it.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+<br>
+<hr style="background-color: #4b4c60"></hr>
+<a id = "Work"></a>
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## <img align= center width=65px height=65px src="https://raw.githubusercontent.com/EslamAsHhraf/EslamAsHhraf/main/images/skills.gif"> Search Engine Modules
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+<table align="left;">
+<tr>
+<th width=23%>Module</th>
+<th>Description</th>
+</tr>
+<tr>
+<td> 🔷 Web Crawler</td>
+<td>A web crawler is a software agent that collects web documents. The crawler begins with a list of URLs (seed set). It retrieves the documents identified by these URLs and extracts hypertext links from them. The URLs that have been extracted are added to the list of URLs to be downloaded. Web crawling is thus a recursive process.</td>
+</tr>
+<tr>
+<td>🔶 Indexer</td>
+<td>The output of web crawling process is a set of downloaded HTML documents. To respond to user queries fast enough, the contents of these documents have to be indexed in a data structure that stores the words contained in each document and their importance.</td>
+</tr>
+<tr>
+<td> 🔷 Query Processor</td>
+<td>This module receives search queries, performs necessary preprocessing and searches the index for relevant documents. Retrieve documents containing words that share the same stem with those in the search query. For example, the search query “travel” should match (with lower degree) the words “traveler”, “traveling” … etc.</td>
+</tr>
+<tr>
+<td>🔶 Phrase Searching</td>
+<td>Search engines will generally search for words as phrases when quotation marks are placed around the phrase.</td>
+</tr>
+<tr>
+<td>🔷 Ranker</td>
+<td>
+<p>The ranker module sorts documents based on their popularity and relevance to the search query.
+</p>
+<ol>
+<li>Relevance</li>
+<p>Relevance is a relation between the query words and the result page and could be calculated in several ways such as tf-idf of the query word in the result page or simply whether the query word appeared in the title, heading, or body. And then you aggregate the scores from all query words to produce the final page relevance score.</p>
+<li>Popularity</li>
+<p>Popularity is a measure for the importance of any web page regardless the requested query. You can use pagerank algorithm (as explained in the lecture) or other ranking algorithms to calculate each page popularity.</p>
+</ol>
+</td>
+</tr>
+<td>🔷 Web Interface</td>
+<td><p>We  implement a web interface for  search engine.</p> 
+<ul>
+<li>This interface receives user queries and displays the resulting pages returned by the engine</li>
+<br>
+<li>The result appears with snippets of the text containing queries words. The output looks like google's results page.</li>
+</ul>
+</td>
+</tr>
+</table>
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+<hr style="background-color: #4b4c60"></hr>
+<a id ="Video"></a>
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## <img  align= center width= 70px height =70px src="https://img.genial.ly/5f91608064ad990c6ee12237/bd7195a3-a8bb-494b-8a6d-af48dd4deb4b.gif?genial&1643587200063"> Demo
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+<div  align="center">
+  <img align="center" height=370px  src="./repos/demo.gif">
+</div>

@@ -9,10 +9,12 @@ public class Crawling {
 
     public static void main(String[] args){
         ArrayList<String> testURLS = new ArrayList<>();
+        testURLS.add("https://www.uni-kl.de/");
         testURLS.add("https://www.cs.uni-kl.de");
-        testURLS.add("https://www.cs.uni-kl.de/studium");
-        testURLS.add("https://www.cs.uni-kl.de/organisation");
+        testURLS.add("https://www.bio.uni-kl.de/");
+        testURLS.add("https://www.chemie.uni-kl.de/");
+        testURLS.add("https://www.informatik.uni-kl.de/");
 
-        Crawler cr = new Crawler(testURLS, 5, 50, false);
+        Crawler cr = new Crawler(testURLS, 100, 50, false);
     }
 }

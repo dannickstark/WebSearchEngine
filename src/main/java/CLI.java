@@ -1,6 +1,4 @@
 import DB.*;
-import DB.Entities.DocumentEntity;
-import DB.Entities.FeatureEntity;
 import DB.Entities.SearchResult;
 
 import java.util.ArrayList;
@@ -10,7 +8,7 @@ public class CLI {
     DB db;
 
     CLI(){
-        db = new DB(DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
+        db = new DB(DBVars.dbPort, DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
         showWelcome();
 
         work();
@@ -47,7 +45,7 @@ public class CLI {
     }
 
     public void showResult(int index, SearchResult result){
-        System.out.printf("[%s] - %s - (Score: %s)%n", (index + 1), result.getUrl(), result.getAgScore());
+        System.out.printf("[%s] - %s - (Score: %s)%n", (index + 1), result.getUrl(), result.getScore());
     }
 
     public static void main(String[] args){

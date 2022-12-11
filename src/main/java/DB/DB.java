@@ -6,7 +6,6 @@ import Indexer.TextManipulator;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -15,17 +14,17 @@ public class DB {
     private Connection conn = null;
     private String dbName;
 
-    public DB(String dbName, String user, String pass) {
+    public DB(String port, String dbName, String user, String pass) {
         TextManipulator.loadStopWords();
 
         this.dbName = dbName;
-        this.connect(user, pass);
+        this.connect(port, user, pass);
     }
 
-    public Connection connect(String user, String pass) {
+    public Connection connect(String port, String user, String pass) {
         try {
             Class.forName("org.postgresql.Driver");
-            conn = DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + this.dbName, user, pass);
+            conn = DriverManager.getConnection("jdbc:postgresql://localhost:" + port + "/" + this.dbName, user, pass);
 
             if (conn != null) {
                 System.out.println("Connection to DB established !");
@@ -377,10 +376,9 @@ public class DB {
                      	select term, 1 + LOG(term_frequency) tf
                      	from features
                      ), docfs as (
-                     	select term, COUNT(DISTINCT docid) docs
+                     	select term, COUNT(DISTINCT docid)::float docs
                      	from features
                      	GROUP BY term
-                     	ORDER BY term
                      ), totalDocs as (
                      	select COUNT(DISTINCT docid)
                      	from documents
@@ -407,7 +405,7 @@ public class DB {
                 	GROUP BY docid
                 )
                                 
-                select d.*, SUM(f.score) agScore
+                select d.*, AVG(f.score) agScore
                 from features f, docsTerms dt, documents d
                 where dt.terms @> string_to_array('%s', ' ')
                     AND f.docid = dt.docid
@@ -422,7 +420,7 @@ public class DB {
 
     public ResultSet disjunctiveSearch(String queryTerms, Object k){
         String query = String.format("""
-                select d.*, SUM(f.score) agScore
+                select d.*, AVG(f.score) agScore
                 from features f, documents d
                 where f.term = ANY(string_to_array('%s', ' '))
                     AND f.docid = d.docid
@@ -564,7 +562,7 @@ public class DB {
             for(SearchResult srDis : resultsDis){
                 for(SearchResult srCon : resultsCon){
                     if(srDis.getDocid() == srCon.getDocid()){
-                        srDis.setAgScore(srDis.getAgScore() + srCon.getAgScore());
+                        srDis.setScore(srDis.getScore() + srCon.getScore());
                         results.add(srDis);
                         break;
                     }
@@ -597,8 +595,8 @@ public class DB {
         // construct new query
         String newQueryTerms = String.join(" ", stemmedWords);
 
-        ArrayList<SearchResult> results = new ArrayList<>();
-        ArrayList<StatsEntity> statsResults = new ArrayList<>();
+        ArrayList<SearchResult> results;
+        ArrayList<StatsEntity> statsResults;
 
         if(mode == "conjunctive"){
             results = getSearchResult(conjunctiveSearch(newQueryTerms, k));

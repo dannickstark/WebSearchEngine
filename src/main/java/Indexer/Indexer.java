@@ -28,7 +28,7 @@ public class Indexer {
     private static HashMap<String, HashMap<String, Integer>> freqOfWords;
 
     public Indexer(){
-        db = new DB(DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
+        db = new DB(DBVars.dbPort, DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
         freqOfWords = new HashMap<>();
     }
 

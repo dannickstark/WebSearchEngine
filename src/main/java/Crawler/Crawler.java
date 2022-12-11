@@ -28,7 +28,7 @@ public class Crawler {
     public volatile Object o1, o2, o3, o4, o5;
 
     public Crawler(ArrayList<String> urlSet, int maxDepth, int maxDoc, boolean multipleDomain){
-        db = new DB(DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
+        db = new DB(DBVars.dbPort, DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
 
         this.urlSet = urlSet;
         this.maxDepth = maxDepth;

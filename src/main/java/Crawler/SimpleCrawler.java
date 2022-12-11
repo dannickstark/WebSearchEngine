@@ -9,12 +9,13 @@ import org.w3c.tidy.Tidy;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,6 +62,7 @@ public class SimpleCrawler {
             if(!checkLink(url, null))
                 continue;
 
+            String baseUrl = url;
             url = UrlCleaner.normalizeUrl(url);
 
             //Check if that page was visited before
@@ -75,19 +77,21 @@ public class SimpleCrawler {
                         }
                     }
 
-                    System.out.println("[" + this.threadID + "] Visiting (Level " + currentLevel + "): " + url);
+                    System.out.println("[" + this.threadID + "] Visiting (Level " + currentLevel + "): " + baseUrl);
 
-                    ArrayList<String> nextLinks = visitPage(url);
+                    ArrayList<String> nextLinks = visitPage(baseUrl);
 
                     if(nextLinks != null){
                         System.out.println("[" + this.threadID + "] ===> Collecting links in the page");
 
                         for(String newLink : nextLinks){
+                            String normNewLink = UrlCleaner.normalizeUrl(newLink);
+
                             synchronized (this.ct.crawler.o3){
-                                if(!visited.contains(newLink)){
+                                if(!visited.contains(normNewLink)){
                                     if(!que.contains(newLink)){
                                         this.que.add(newLink);
-                                        this.levelMap.put(newLink, currentLevel + 1);
+                                        this.levelMap.put(normNewLink, currentLevel + 1);
 
                                         synchronized (this.ct.crawler.db) {
                                             this.ct.crawler.db.addUrl(newLink);
@@ -129,8 +133,14 @@ public class SimpleCrawler {
             int code = connection.getResponseCode();
             if (code==200)
             {
+                URLConnection conn = url.openConnection();
+                InputStream in = conn.getInputStream();
+
+                if (in == null)
+                    throw new IOException("Failed to open connection");
+
                 System.out.println("[" + this.threadID + "] ===> Connection established");
-                Document doc = tidy.parseDOM(url.openStream(), null);
+                Document doc = tidy.parseDOM(in, null);
 
                 // Use XPath to obtain all links
                 XPath xpath = XPathFactory.newInstance().newXPath();
@@ -140,7 +150,8 @@ public class SimpleCrawler {
                 ArrayList<String> urls = new ArrayList<>();
                 for(int i=0;i<nodes.getLength();i++)
                 {
-                    String link = UrlCleaner.normalizeUrl(nodes.item(i).getNodeValue());
+                    //String link = UrlCleaner.normalizeUrl(nodes.item(i).getNodeValue());
+                    String link = nodes.item(i).getNodeValue();
 
                     if(checkLink(link, path)){
                         urls.add(link);

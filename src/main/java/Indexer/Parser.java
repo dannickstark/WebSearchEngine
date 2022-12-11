@@ -3,6 +3,7 @@ package Indexer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
@@ -52,7 +53,21 @@ public class Parser {
             }
         }
 
-        parsedDoc.put("description", docCode.substring(0, Math.min(docCode.length(), 100)));
+        XPathExpression pNode1 = xpath.compile("//p[0]");
+        String p1 = (String)pNode1.evaluate(doc, XPathConstants.STRING);
+
+        XPathExpression pNode2 = xpath.compile("//p[1]");
+        String p2 = (String)pNode2.evaluate(doc, XPathConstants.STRING);
+
+        XPathExpression pNode3 = xpath.compile("//p[2]");
+        String p3 = (String)pNode3.evaluate(doc, XPathConstants.STRING);
+
+        String description = p1 + " ... " + p2 + " ... " + p3;
+
+        parsedDoc.put("description",
+                description.substring(0, Math.min(description.length(), 200))
+        );
+
         docCode = title + " " + docCode;
         parsedDoc.put("doc", docCode);
         return parsedDoc;

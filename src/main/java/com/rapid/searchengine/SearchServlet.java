@@ -16,7 +16,7 @@ public class SearchServlet extends HttpServlet {
     DB db;
 
     public void init() {
-        db = new DB(DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
+        db = new DB(DBVars.dbPort, DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
