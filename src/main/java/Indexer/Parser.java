@@ -108,7 +108,6 @@ public class Parser {
             if (parentNode.getNodeType() == Node.ELEMENT_NODE) {
                 Element e = (Element) parentNode;
 
-                var tmp = e.getTagName();
                 //ignore script and style tags
                 if (e.getTagName().equals("script") || e.getTagName().equals("style")) {
                     return NodeFilter.FILTER_REJECT;

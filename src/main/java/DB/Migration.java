@@ -45,6 +45,7 @@ public class Migration {
                     url varchar(200) UNIQUE NOT NULL, 
                     title varchar(200),
                     description varchar(200),
+                    terms text[],
                     crawled_on_date date NOT NULL DEFAULT CURRENT_DATE, 
                     primary key(docid)
                 );

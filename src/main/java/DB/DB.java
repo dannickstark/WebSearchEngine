@@ -122,6 +122,13 @@ public class DB {
         return executeUpdateQuery(query);
     }
 
+    public Integer insert_document(String url, String title, String description, String[] terms) {
+        String query = String.format("insert into documents(url, title, description, terms) values('%s', '%s', '%s', %s);",
+                url, title, description, terms
+        );
+        return executeUpdateQuery(query);
+    }
+
     public Integer insert_feature(int docid, String term, int term_frequency) {
         String query = String.format(
                 "insert into features (docid, term, term_frequency) values(%s, '%s', %s);",
@@ -224,7 +231,8 @@ public class DB {
                         rs.getInt("docid"),
                         rs.getString("url"),
                         rs.getString("title"),
-                        rs.getString("description")
+                        rs.getString("description"),
+                        (ArrayList<String>) rs.getArray("terms")
                 ));
             }
         } catch (SQLException throwables) {
@@ -418,6 +426,20 @@ public class DB {
         return executePutQuery(query);
     }
 
+    public ResultSet conjunctiveSearch_new(String queryTerms, Object k){
+        String query = String.format(""" 
+                select d.*, AVG(f.score) agScore
+                from features f, documents d
+                where d.terms @> string_to_array('%s', ' ')
+                    AND f.docid = d.docid
+                    AND f.term = ANY(string_to_array('%s', ' '))
+                GROUP BY d.docid
+                ORDER BY agScore desc
+                LIMIT %s;
+                """, queryTerms, queryTerms, k);
+        return executePutQuery(query);
+    }
+
     public ResultSet disjunctiveSearch(String queryTerms, Object k){
         String query = String.format("""
                 select d.*, AVG(f.score) agScore
@@ -446,7 +468,7 @@ public class DB {
                     AND f.term = ANY(string_to_array('%s', ' '))
                 GROUP BY f.term
                 ORDER BY term;
-                """, queryTerms);
+                """, queryTerms, queryTerms);
         return executePutQuery(query);
     }
 
@@ -500,7 +522,7 @@ public class DB {
 
             for (int i = 0; i <= matcher2.groupCount(); i++) {
                 String quote = matcher2.group(i);
-                quotedQueries += quote;
+                quotedQueries += quote.replaceAll("\"", "");
                 queryTerms = queryTerms.replaceAll(quote, "");
             }
         }
@@ -524,22 +546,23 @@ public class DB {
         statsDis = recDis.statsResults;
 
         // Merge the stats
-        ArrayList<StatsEntity> finalStats = new ArrayList<>(statsCon);
+        ArrayList<StatsEntity> finalStats;
 
-        for(StatsEntity stat : statsDis){
-            Boolean already = false;
+        if(quotedQueries != null){
+            finalStats = new ArrayList<>();
+            for(StatsEntity stat : statsCon){
 
-            for(StatsEntity stat2 : statsCon){
-                if(stat2.getTerm().equals(stat.getTerm())){
-                    stat.setDf(stat.getDf() + stat2.getDf());
-                    already = true;
-                    continue;
+                for(StatsEntity stat2 : statsDis){
+                    if(stat2.getTerm().equals(stat.getTerm())){
+                        stat.setDf(stat.getDf() + stat2.getDf());
+                        break;
+                    }
                 }
-            }
 
-            if(!already){
                 finalStats.add(stat);
             }
+        } else {
+            finalStats = new ArrayList<>(statsDis);
         }
 
         // Filter the lists
@@ -554,20 +577,25 @@ public class DB {
         // Join the two lists
         ArrayList<SearchResult> results = new ArrayList<>();
 
-        if(resultsCon.size() == 0){
-            results = resultsDis;
-        } else if(resultsDis.size() == 0){
-            results = resultsCon;
-        } else {
-            for(SearchResult srDis : resultsDis){
-                for(SearchResult srCon : resultsCon){
-                    if(srDis.getDocid() == srCon.getDocid()){
-                        srDis.setScore(srDis.getScore() + srCon.getScore());
-                        results.add(srDis);
-                        break;
+        if(quotedQueries != null){
+            if(resultsCon.size() > 0){
+                if(resultsDis.size() == 0){
+                    results = resultsCon;
+                } else {
+                    for(SearchResult srCon : resultsCon){
+                        for(SearchResult srDis : resultsDis){
+                            if(srDis.getDocid() == srCon.getDocid()){
+                                srCon.setScore(srDis.getScore() + srCon.getScore());
+                                break;
+                            }
+                        }
+
+                        results.add(srCon);
                     }
                 }
             }
+        } else {
+            results = resultsDis;
         }
 
         // Get k first results

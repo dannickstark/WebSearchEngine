@@ -35,7 +35,7 @@ public class Indexer {
     public void index(String url, Document doc, ArrayList<String> outgoingLinks) throws XPathExpressionException, TransformerException {
         // 1- parse html
         HashMap<String, String> parsedDoc = Parser.parse(doc);
-                String parsedText = parsedDoc.get("doc");
+        String parsedText = parsedDoc.get("doc");
         // 2- split words
         List<String> words = TextManipulator.splitWords(parsedText);
         // 3-get indices of each word
@@ -54,6 +54,8 @@ public class Indexer {
         //buildInvertedIndex(stemmedWords, fileName, invertedIndex);
 
         // Save document
+        String[] list = stemmedWords.toArray(new String[0]);
+        //Integer docEnID = db.insert_document(url, parsedDoc.get("title"), parsedDoc.get("description"), list);
         Integer docEnID = db.insert_document(url, parsedDoc.get("title"), parsedDoc.get("description"));
         //DocumentEntity docEn = db.getDocuments(db.searchByAtt("documents", "url", url)).get(0);
         // Save terms

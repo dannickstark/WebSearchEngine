@@ -19,7 +19,7 @@
                     <a class="nav-link" href="#">Description</a>
                 </li>
             </ul>
-            <form action="/search" class="d-flex">
+            <form action="/search" class="d-flex left-zone-bar">
                 <input name="q" value="<c:out value="${query}"></c:out>" class="form-control" type="search" placeholder="Search" aria-label="Search">
                 <button class="btn btn-outline-success" type="submit">Search</button>
             </form>
