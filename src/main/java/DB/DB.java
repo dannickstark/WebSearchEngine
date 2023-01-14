@@ -5,6 +5,7 @@ import Indexer.TextManipulator;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,11 +15,20 @@ public class DB {
     private Connection conn = null;
     private String dbName;
 
+    private PageRank pr;
+
     public DB(String port, String dbName, String user, String pass) {
         TextManipulator.loadStopWords();
+        TextManipulator.loadCountsWords();
 
         this.dbName = dbName;
         this.connect(port, user, pass);
+
+        this.pr = new PageRank(this);
+    }
+
+    public void computePageRank(){
+        this.pr.compute();
     }
 
     public Connection connect(String port, String user, String pass) {
@@ -115,16 +125,16 @@ public class DB {
     }
 
     // =========== INSERT
-    public Integer insert_document(String url, String title, String description) {
-        String query = String.format("insert into documents(url, title, description) values('%s', '%s', '%s');",
-                url, title, description
+    public Integer insert_document(String url, String title, String description, Boolean isInternal, String lang) {
+        String query = String.format("insert into documents(url, title, description, internal, language) values('%s', '%s', '%s', %s, '%s');",
+                url, title, description, isInternal, lang
         );
         return executeUpdateQuery(query);
     }
 
-    public Integer insert_document(String url, String title, String description, String[] terms) {
-        String query = String.format("insert into documents(url, title, description, terms) values('%s', '%s', '%s', %s);",
-                url, title, description, terms
+    public Integer insert_document(String url, String title, String description, String[] terms, Boolean isInternal, String lang) {
+        String query = String.format("insert into documents(url, title, description, terms, internal, language) values('%s', '%s', '%s', %s, %s, '%s');",
+                url, title, description, terms, isInternal, lang
         );
         return executeUpdateQuery(query);
     }
@@ -203,7 +213,7 @@ public class DB {
         executeUpdateQuery(query);
     }
 
-    public void updateEntityByKey(String table_name, String keyName, String keyVal, String att, Object val) {
+    public void updateEntityByKey(String table_name, String keyName, Integer keyVal, String att, Object val) {
         String query = String.format("update %s set %s=%s where %s='%s'", table_name, att, val, keyName, keyVal);
         executeUpdateQuery(query);
     }
@@ -337,7 +347,8 @@ public class DB {
                         rs.getString("url"),
                         rs.getString("title"),
                         rs.getString("description"),
-                        rs.getDouble("agScore")
+                        rs.getDouble("agScore"),
+                        rs.getBoolean("internal")
                 ));
             }
         } catch (SQLException throwables) {
@@ -388,7 +399,7 @@ public class DB {
                      	from features
                      	GROUP BY term
                      ), totalDocs as (
-                     	select COUNT(DISTINCT docid)
+                     	select COUNT(docid)
                      	from documents
                      ), idfs as (
                      	select f.term, LOG(ttds.count / df.docs) idf
@@ -405,10 +416,10 @@ public class DB {
         executeUpdateQuery(query);
     }
 
-    public ResultSet conjunctiveSearch(String queryTerms, Object k){
+    public ResultSet conjunctiveSearch(String queryTerms, Object k, String lang){
         String query = String.format("""
                 WITH docsTerms as (
-                	select docid,  array_agg(term)::text[] as terms
+                	select docid, array_agg(term)::text[] as terms
                 	from features
                 	GROUP BY docid
                 )
@@ -419,41 +430,44 @@ public class DB {
                     AND f.docid = dt.docid
                     AND f.docid = d.docid
                     AND f.term = ANY(string_to_array('%s', ' '))
+                    AND d.language = '%s'
                 GROUP BY d.docid
                 ORDER BY agScore desc
                 LIMIT %s;
-                """, queryTerms, queryTerms, k);
+                """, queryTerms, queryTerms, lang, k);
         return executePutQuery(query);
     }
 
-    public ResultSet conjunctiveSearch_new(String queryTerms, Object k){
+    public ResultSet conjunctiveSearch_new(String queryTerms, Object k, String lang){
         String query = String.format(""" 
                 select d.*, AVG(f.score) agScore
                 from features f, documents d
                 where d.terms @> string_to_array('%s', ' ')
                     AND f.docid = d.docid
                     AND f.term = ANY(string_to_array('%s', ' '))
+                    AND d.language = '%s'
                 GROUP BY d.docid
                 ORDER BY agScore desc
                 LIMIT %s;
-                """, queryTerms, queryTerms, k);
+                """, queryTerms, queryTerms, lang, k);
         return executePutQuery(query);
     }
 
-    public ResultSet disjunctiveSearch(String queryTerms, Object k){
+    public ResultSet disjunctiveSearch(String queryTerms, Object k, String lang){
         String query = String.format("""
                 select d.*, AVG(f.score) agScore
                 from features f, documents d
                 where f.term = ANY(string_to_array('%s', ' '))
                     AND f.docid = d.docid
+                    AND d.language = '%s'
                 GROUP BY d.docid
                 ORDER BY agScore desc
                 LIMIT %s;
-                """, queryTerms, k);
+                """, queryTerms, lang, k);
         return executePutQuery(query);
     }
 
-    public ResultSet conjunctiveStats(String queryTerms){
+    public ResultSet conjunctiveStats(String queryTerms, String lang){
         String query = String.format("""
                 WITH docsTerms as (
                 	select docid,  array_agg(term)::text[] as terms
@@ -462,24 +476,27 @@ public class DB {
                 )
                                 
                 select f.term, SUM(f.docid) df
-                from features f, docsTerms dt
+                from features f, docsTerms dt, documents d
                 where dt.terms @> string_to_array('%s', ' ')
                     AND f.docid = dt.docid
                     AND f.term = ANY(string_to_array('%s', ' '))
+                    AND d.docid = f.docid
+                    AND d.language = '%s'
                 GROUP BY f.term
                 ORDER BY term;
-                """, queryTerms, queryTerms);
+                """, queryTerms, queryTerms, lang);
         return executePutQuery(query);
     }
 
-    public ResultSet disjunctiveStats(String queryTerms){
+    public ResultSet disjunctiveStats(String queryTerms, String lang){
         String query = String.format("""
-                select term, SUM(docid) df
-                from features
-                where term = ANY(string_to_array('%s', ' '))
-                GROUP BY term
-                ORDER BY term;
-                """, queryTerms);
+                select f.term, SUM(f.docid) df
+                from features f, documents d
+                where f.term = ANY(string_to_array('%s', ' '))
+                    AND d.language = '%s'
+                GROUP BY f.term
+                ORDER BY f.term;
+                """, queryTerms, lang);
         return executePutQuery(query);
     }
 
@@ -500,6 +517,10 @@ public class DB {
     }
 
     public Recolter search(String queryTerms, Integer k){
+        return search(queryTerms, k, "en");
+    }
+
+    public Recolter search(String queryTerms, Integer k, String lang){
         // get and remove site operator
         String urlRegex = "^\\s*site:(https?:\\/\\/)?(www.)?([^\\s]*)\\s+(.+)";
         Pattern pattern = Pattern.compile(urlRegex);
@@ -535,13 +556,13 @@ public class DB {
         Recolter recCon;
         // Search for conjunctive
         if(quotedQueries != null){
-            recCon = searchNext(quotedQueries, "null", "conjunctive");
+            recCon = searchNext(quotedQueries, "null", "conjunctive", lang);
             resultsCon = recCon.results;
             statsCon = recCon.statsResults;
         }
 
         // Search for disjunctive
-        Recolter recDis = searchNext(queryTerms, "null", null);
+        Recolter recDis = searchNext(queryTerms, "null", null, lang);
         resultsDis = recDis.results;
         statsDis = recDis.statsResults;
 
@@ -611,15 +632,17 @@ public class DB {
         }
     }
 
-    public Recolter searchNext(String queryTerms, Object k, String mode){
+    public Recolter searchNext(String queryTerms, Object k, String mode, String lang){
         // split words
         List<String> words = TextManipulator.splitWords(queryTerms);
+        // Language
+        String language = TextManipulator.classify(words);
         // convert to lowercase
         words = TextManipulator.convertToLower(words);
         // remove stop words
-        words = TextManipulator.removeStopWords(words);
+        words = TextManipulator.removeStopWords(words, language);
         // stemming
-        List<String> stemmedWords = TextManipulator.stemming(words);
+        List<String> stemmedWords = TextManipulator.stemming(words, language);
         // construct new query
         String newQueryTerms = String.join(" ", stemmedWords);
 
@@ -627,14 +650,88 @@ public class DB {
         ArrayList<StatsEntity> statsResults;
 
         if(mode == "conjunctive"){
-            results = getSearchResult(conjunctiveSearch(newQueryTerms, k));
-            statsResults = getStats(conjunctiveStats(newQueryTerms));
+            results = getSearchResult(conjunctiveSearch(newQueryTerms, k, lang));
+            statsResults = getStats(conjunctiveStats(newQueryTerms, lang));
         } else {
-            results = getSearchResult(disjunctiveSearch(newQueryTerms, k));
-            statsResults = getStats(disjunctiveStats(newQueryTerms));
+            results = getSearchResult(disjunctiveSearch(newQueryTerms, k, lang));
+            statsResults = getStats(disjunctiveStats(newQueryTerms, lang));
         }
 
         return new Recolter(results, statsResults);
+    }
+
+    public HashMap<String, Integer> getTermsCounts(){
+        String query = String.format("""
+                select term, COUNT(term) as nbOccurences
+                from features
+                GROUP BY term;
+                """);
+        ResultSet rs = executePutQuery(query);
+
+        HashMap<String, Integer> result = new HashMap<>();
+        if (rs == null)
+            return result;
+
+        try {
+            while (rs.next()) {
+                result.put(
+                        rs.getString("term"),
+                        rs.getInt("nbOccurences")
+                );
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return result;
+    }
+
+    public String checkQuerySpelling(String query){
+        Boolean changed = false;
+
+        // Get the list of terms in the db
+        HashMap<String, Integer> dbWords = getTermsCounts();
+
+        // Split query in list of word
+        List<String> qWords = TextManipulator.splitWords(query);
+
+        // For each word compute the Levenshtein distance
+        // Find the alternative for each word
+        String newQuery = "";
+
+        for(int i=0; i < qWords.size(); i++){
+            String qWord = qWords.get(i);
+            int qOcuurences = (dbWords.get(qWord) == null? 0 : dbWords.get(qWord));
+
+            String mSimWord = qWord;
+            int mLowerDist = 0;
+            int mOcuurences = 0;
+
+            for (String dbWord : dbWords.keySet()){
+                if(dbWord != qWord){
+                    int dist = TextManipulator.computeLevenshteinDistance(qWord, dbWord);
+
+                    Boolean check1 = mLowerDist > 0 && dist < mLowerDist;
+                    Boolean check2 = mLowerDist == 0;
+
+                    if((check1 || check2) && dist < qWord.length()){
+                        mLowerDist = dist;
+                        mSimWord = dbWord;
+                        mOcuurences = dbWords.get(dbWord);
+                    }
+                }
+            }
+
+            // Check if: A term occurs, but rarely, and there are much more frequently used
+            //terms in the database that are very similar to the query term
+            if(mSimWord != qWord && mOcuurences > qOcuurences){
+                changed = true;
+                newQuery += " " + mSimWord;
+            } else {
+                newQuery += " " + qWord;
+            }
+        }
+
+        return (changed ? newQuery : query);
     }
 
 }

@@ -19,6 +19,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,14 +42,16 @@ public class Indexer {
         String parsedText = parsedDoc.get("doc");
         // 2- split words
         List<String> words = TextManipulator.splitWords(parsedText);
+        // 10- detect language
+        String language = TextManipulator.classify(words);
         // 3-get indices of each word
         //getIndexOfWord(words, originalDoc, fileName); // TODO: Synchronized threads
         // 4-convert to lowercase
         words = TextManipulator.convertToLower(words);
         // 5- remove stop words
-        words = TextManipulator.removeStopWords(words);
+        words = TextManipulator.removeStopWords(words, language);
         // 6- stemming
-        List<String> stemmedWords = TextManipulator.stemming(words);
+        List<String> stemmedWords = TextManipulator.stemming(words, language);
         // 7- calculate the score of each term
         calcTermsFreq(stemmedWords, url);
         // 8- build processed words
@@ -56,7 +62,14 @@ public class Indexer {
         // Save document
         String[] list = stemmedWords.toArray(new String[0]);
         //Integer docEnID = db.insert_document(url, parsedDoc.get("title"), parsedDoc.get("description"), list);
-        Integer docEnID = db.insert_document(url, parsedDoc.get("title"), parsedDoc.get("description"));
+        Boolean checkIfInternal = checkIfInternalDoc(url);
+        Integer docEnID = db.insert_document(
+                url,
+                parsedDoc.get("title"),
+                parsedDoc.get("description"),
+                checkIfInternal,
+                language
+        );
         //DocumentEntity docEn = db.getDocuments(db.searchByAtt("documents", "url", url)).get(0);
         // Save terms
         HashMap<String, Integer> termsFreqs = freqOfWords.get(url);
@@ -84,6 +97,22 @@ public class Indexer {
         ArrayList<LinkEntity> ingoingLinks = db.getLinks(db.searchByAtt("links", "url", url));
         for (LinkEntity linkEn : ingoingLinks) {
             db.updateEntityByKey("links", "linkid", linkEn.getLinkid(), "to_docid", docEnID);
+        }
+    }
+
+    private Boolean checkIfInternalDoc(String path) {
+        try {
+            URL url = new URL(path);
+            InetAddress address = InetAddress.getByName(url.getHost());
+            if (address.isSiteLocalAddress()) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
         }
     }
 

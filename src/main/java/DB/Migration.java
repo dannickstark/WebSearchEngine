@@ -47,6 +47,9 @@ public class Migration {
                     description varchar(200),
                     terms text[],
                     crawled_on_date date NOT NULL DEFAULT CURRENT_DATE, 
+                    pagerank double precision,
+                    internal BOOLEAN DEFAULT FALSE,
+                    language varchar(200),
                     primary key(docid)
                 );
             """;

@@ -21,6 +21,10 @@
             </ul>
             <form action="/search" class="d-flex left-zone-bar">
                 <input name="q" value="<c:out value="${query}"></c:out>" class="form-control" type="search" placeholder="Search" aria-label="Search">
+                <select name="language" class="form-select" aria-label="Select the language">
+                    <option value="en" <c:if test="${language == 'en' || empty language}">selected</c:if>>English</option>
+                    <option value="de" <c:if test="${language == 'de'}">selected</c:if>>Deutsch</option>
+                </select>
                 <button class="btn btn-outline-success" type="submit">Search</button>
             </form>
         </div>
@@ -32,6 +36,13 @@
         About <c:out value="${results.size()}"></c:out> result(s)
         (<c:out value="${elapsedTime}"></c:out> seconds)
     </small></p>
+
+    <c:if test="${not empty alternativeQ}">
+        <p><small>
+            An alternative research could be <a href="/search?q=<c:out value="${alternativeQ}"></c:out>"><c:out value="${alternativeQ}"></c:out></a>
+        </small></p>
+    </c:if>
+
     <ul class="list-group list-group-flush">
         <c:forEach items="${results}" var="result">
             <li class="list-group-item">
@@ -41,9 +52,11 @@
                             <a href="<c:out value="${result.url}">#</c:out>" class="card-link">
                                 <c:out value="${result.title}">...</c:out>
                             </a>
-                        </h5>
-                        <h6 class="card-subtitle mb-2 text-muted"><c:out value="${result.url}"></c:out></h6>
-                        <p class="card-text"><c:out value="${result.description}"></c:out></p>
+                        </h5
+                            <c:if test="${!result.internal || (result.internal && isInNetwork) }">
+                                <h6 class="card-subtitle mb-2 text-muted"><c:out value="${result.url}"></c:out></h6>
+                                <p class="card-text"><c:out value="${result.description}"></c:out></p>
+                            </c:if>
                     </div>
                 </div>
             </li>

@@ -16,19 +16,31 @@ public class CLI {
 
     public void work(){
         Scanner in = new Scanner(System.in);
+        String query;
 
-        askQuery();
-        String query = in.nextLine();
+        askJob();
+        query = in.nextLine();
 
-        Recolter rec = db.search(query, 5);
-        ArrayList<SearchResult> results = rec.results;
+        switch (query){
+            case "Q":
+                return;
+            case "S":
+                askQuery();
+                query = in.nextLine();
 
-        for(int i=0; i < results.size(); i++){
-            SearchResult res = results.get(i);
-            showResult(i, res);
+                Recolter rec = db.search(query, 5);
+                ArrayList<SearchResult> results = rec.results;
+
+                for(int i=0; i < results.size(); i++){
+                    SearchResult res = results.get(i);
+                    showResult(i, res);
+                }
+
+                work();
+                break;
+            default:
+                work();
         }
-
-        work();
     }
 
     public void showWelcome(){
@@ -37,6 +49,13 @@ public class CLI {
         System.out.println("==[ Welcome to " + ConsoleColors.PURPLE_BOLD + "'RAPID'" + ConsoleColors.RESET + " search engine ]==");
         System.out.println("========================================");
         System.out.println("========================================\n");
+    }
+
+    public void askJob(){
+        System.out.println("What did you want to do now ?");
+        System.out.print("-> Search something (S)");
+        System.out.print("-> Quit (Q)");
+        System.out.print("===> ");
     }
 
     public void askQuery(){

@@ -27,7 +27,7 @@ public class Crawler {
 
     public volatile Object o1, o2, o3, o4, o5;
 
-    public Crawler(ArrayList<String> urlSet, int maxDepth, int maxDoc, boolean multipleDomain){
+    public Crawler(ArrayList<String> urlSet, int maxDepth, int maxDoc, boolean multipleDomain, int numberTreads){
         db = new DB(DBVars.dbPort, DBVars.dbName, DBVars.dbUser, DBVars.dbPass);
 
         this.urlSet = urlSet;
@@ -44,23 +44,27 @@ public class Crawler {
         o4 = new Object();
         o5 = new Object();
 
-        this.work();
+        this.work(numberTreads);
     }
 
-    public void work(){
+    public void work(int numberTreads){
         String oldState = checkState();
 
-        ArrayList<UrlEntity> links = db.getUrls(db.selectTable("urls"));
+        // Load urls
+        ArrayList<UrlEntity> urls = db.getUrls(db.selectTable("urls"));
 
-        for(UrlEntity l : links){
-            if(l.getVisited()){
-                this.visited.add(l.getUrl());
+        for(UrlEntity u : urls){
+            if(u.getVisited()){
+                this.visited.add(u.getUrl());
             } else {
                 if(oldState.equals("Interrupted")){
-                    this.que.add(l.getUrl());
+                    this.que.add(u.getUrl());
                 }
             }
         }
+
+        // Load PageRank
+
 
         if (!oldState.equals("Interrupted")) {
             this.que = new LinkedList<>(urlSet);
@@ -74,9 +78,9 @@ public class Crawler {
 
         ArrayList<CrawlerThread> bots = new ArrayList<>();
 
-        bots.add(new CrawlerThread(1, this));
-        bots.add(new CrawlerThread(2, this));
-        bots.add(new CrawlerThread(3, this));
+        for(int i=0; i<numberTreads; i++){
+            bots.add(new CrawlerThread(i, this));
+        }
 
         for(CrawlerThread c : bots){
             try {
@@ -87,11 +91,15 @@ public class Crawler {
         }
 
         changeState("Finished");
-        System.out.println("Crawling finished successfully");
+        System.out.println("------> Crawling finished successfully");
 
         // Calculate the TF*IDF Score
-        System.out.println("Starting to compute the TF*IDF Score");
+        System.out.println("------> Starting to compute the TF*IDF Score");
         db.calculateTF_IDF();
+
+        // Compute PageRank
+        System.out.println("------> Compute PageRank");
+        db.computePageRank();
     }
 
     private void changeState(String state) {

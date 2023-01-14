@@ -55,10 +55,12 @@ public class SimpleCrawler {
         while (!this.que.isEmpty() && this.visited.size() < this.maxDoc){
             this.ct.sleep(2000);
 
+            // Get the next url
             String url;
             synchronized (this.ct.crawler.o1){
                 url = this.que.poll();
             }
+            // Check if the link respond to certains criteria
             if(!checkLink(url, null))
                 continue;
 
@@ -112,7 +114,7 @@ public class SimpleCrawler {
             Tidy tidy = new Tidy();
             tidy.setInputEncoding("UTF-8");
             tidy.setOutputEncoding("UTF-8");
-            tidy.setMakeClean(true);
+            //tidy.setMakeClean(true);
             tidy.setXHTML(true);
             tidy.setTidyMark(false);
             tidy.setQuiet(true);

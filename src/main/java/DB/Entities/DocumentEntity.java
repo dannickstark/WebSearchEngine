@@ -8,12 +8,14 @@ public class DocumentEntity {
     private String title;
     private String description;
     private ArrayList<String> terms;
+    private Boolean internal = false;
 
-    public DocumentEntity(Integer docid, String url, String title, String description){
+    public DocumentEntity(Integer docid, String url, String title, String description, Boolean internal){
         this.docid = docid;
         this.url = url;
         this.title = title;
         this.description = description;
+        this.internal = internal;
     }
 
     public DocumentEntity(Integer docid, String url, String title, String description, ArrayList<String> terms){
@@ -38,5 +40,9 @@ public class DocumentEntity {
 
     public String getUrl() {
         return url;
+    }
+
+    public Boolean getInternal() {
+        return internal;
     }
 }
