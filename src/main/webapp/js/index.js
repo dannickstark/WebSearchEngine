@@ -1,7 +1,7 @@
 
 function goToSearch(){
     let query = document.querySelector("#search-input").value;
-    window.location.href = `/search?q=${query}`;
+    window.location.href = `./search?q=${query}`;
 }
 
 document.querySelector("#search-btn").addEventListener('click', (event) => {

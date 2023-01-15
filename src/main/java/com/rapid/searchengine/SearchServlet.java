@@ -15,7 +15,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
 
-@WebServlet(name = "searchServlet", value = "/search")
+//@WebServlet(name = "Search", value = "/search")
 public class SearchServlet extends HttpServlet {
     DB db;
     // Map to store rate limiters keyed by IP address

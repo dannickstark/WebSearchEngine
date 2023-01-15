@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@WebServlet(name = "json", value = "/json")
+//@WebServlet(name = "json", value = "/json")
 public class ApiServlet extends HttpServlet {
     DB db;
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();

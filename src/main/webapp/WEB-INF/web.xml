@@ -14,4 +14,24 @@
             <include-prelude>/WEB-INF/tagLibs.jsp</include-prelude>
         </jsp-property-group>
     </jsp-config>
+
+    <servlet>
+        <servlet-name>Search</servlet-name>
+        <servlet-class>com.rapid.searchengine.SearchServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Search</servlet-name>
+        <url-pattern>/search</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>Api</servlet-name>
+        <servlet-class>com.rapid.searchengine.ApiServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Api</servlet-name>
+        <url-pattern>/json</url-pattern>
+    </servlet-mapping>
 </web-app>

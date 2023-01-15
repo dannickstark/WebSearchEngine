@@ -6,20 +6,20 @@
 <%@ include file="sections/header.jsp" %>
 <nav class="navbar navbar-expand-md fixed-top navbar-light bg-light">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/"><img src="./images/logo.png" height="45"></a>
+        <a class="navbar-brand" href="./"><img src="./images/logo.png" height="45"></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav me-auto mb-2 mb-md-0">
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    <a class="nav-link active" aria-current="page" href="./">Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">Description</a>
                 </li>
             </ul>
-            <form action="/search" class="d-flex left-zone-bar">
+            <form action="./search" class="d-flex left-zone-bar">
                 <input name="q" value="<c:out value="${query}"></c:out>" class="form-control" type="search" placeholder="Search" aria-label="Search">
                 <select name="language" class="form-select" aria-label="Select the language">
                     <option value="en" <c:if test="${language == 'en' || empty language}">selected</c:if>>English</option>
@@ -39,7 +39,7 @@
 
     <c:if test="${not empty alternativeQ}">
         <p><small>
-            An alternative research could be <a href="/search?q=<c:out value="${alternativeQ}"></c:out>"><c:out value="${alternativeQ}"></c:out></a>
+            An alternative research could be <a href="./search?q=<c:out value="${alternativeQ}"></c:out><c:if test="${not empty language}">&language=<c:out value="${language}"></c:out></c:if>"><c:out value="${alternativeQ}"></c:out></a>
         </small></p>
     </c:if>
 
