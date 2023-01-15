@@ -69,6 +69,10 @@ git clone https://git.cs.uni-kl.de/dbis/is-project-22/group-01.git
 
 <li>Use Gradle to install all the dependencies</li>
 
+```
+./gradlew
+```
+
 <li>
   Create a database in pgAdmin
   <ul>
@@ -82,6 +86,12 @@ git clone https://git.cs.uni-kl.de/dbis/is-project-22/group-01.git
 ```
 /src/main/java/DB/DBVars.java
 ```
+<ul>Change the value of the variables:
+    <li>dbName</li>
+    <li>dbUser</li>
+    <li>dbPass</li>
+    <li>dbPort</li>
+  </ul>
 </li>
 
 <li>
@@ -118,6 +128,10 @@ Run:
 
 ## How to run the Tomcat Server
 Use the following <a href="https://www.jetbrains.com/help/idea/run-debug-configuration-tomcat-server.html">instructions</a> for it.
+<br>
+Or follow the instructions in this YouTube video.
+<br>
+[![Run Tomcat in IntelliJ IDEA Ultimate](http://img.youtube.com/vi/ThBw3WBTw9Q/0.jpg)](http://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE "Run Tomcat in IntelliJ IDEA Ultimate")
 
 <br>
 <hr style="background-color: #4b4c60"></hr>
@@ -178,3 +192,7 @@ Use the following <a href="https://www.jetbrains.com/help/idea/run-debug-configu
 <div  align="center">
   <img align="center" height=370px  src="./repos/demo.gif">
 </div>
+
+
+## 💻 Server
+The website is accessible from: http://131.246.118.244:8080/is-project

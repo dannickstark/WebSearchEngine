@@ -44,8 +44,6 @@ public class Indexer {
         List<String> words = TextManipulator.splitWords(parsedText);
         // 10- detect language
         String language = TextManipulator.classify(words);
-        // 3-get indices of each word
-        //getIndexOfWord(words, originalDoc, fileName); // TODO: Synchronized threads
         // 4-convert to lowercase
         words = TextManipulator.convertToLower(words);
         // 5- remove stop words
