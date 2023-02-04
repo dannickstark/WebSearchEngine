@@ -1,6 +1,7 @@
 package Indexer;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
@@ -81,6 +82,21 @@ public class TextManipulator {
         return wordsList;
     }
 
+    public static String joinWords(ArrayList<String> words, String joinChar){
+        if(words == null || words.size() == 0) return "";
+
+        String collect = "";
+
+        collect = words.get(0);
+
+        for(int i = 1; i < words.size(); i++){
+            String word = words.get(i);
+            collect += joinChar + word;
+        }
+
+        return collect;
+    }
+
     public static List<String> convertToLower(List<String> words) {
         for (int i = 0; i < words.size(); i++) {
             words.set(i, words.get(i).toLowerCase());
@@ -149,6 +165,7 @@ public class TextManipulator {
         for(int i=0; i < words.size(); i++){
             String word = words.get(i);
 
+            //Set the count to be 1 initially -> in case the word is not in our list
             Double count = 1.0;
             if(counts.get(word) != null){
                 count = Double.valueOf(counts.get(word));
@@ -181,4 +198,38 @@ public class TextManipulator {
 
         return distance[lhs.length()][rhs.length()];
     }
+
+    /**
+     * escape()
+     *
+     * Escape a give String to make it safe to be printed or stored.
+     *
+     * @param s The input String.
+     * @return The output String.
+     **/
+    public static String escape(String s){
+        return s.replace("\\", "\\\\")
+                .replace("\t", " ")
+                .replace("\b", " ")
+                .replace("\n", " ")
+                .replace("\r", " ")
+                .replace("\f", " ")
+                .replace("\'", "\\'")
+                .replace("\"", "\\\"")
+                .replace("'", "''");
+    }
+
+    public static String highlight(List<String> keys, String text){
+        StringBuilder sb = new StringBuilder();
+        String[] words = text.split("\\s+");
+        for (String word : words) {
+            if (keys.contains(word.toLowerCase())) {
+                sb.append("<b>" + word + "</b> ");
+            } else {
+                sb.append(word + " ");
+            }
+        }
+        return sb.toString().trim();
+    }
 }
+

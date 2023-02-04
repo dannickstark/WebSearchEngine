@@ -8,6 +8,10 @@ public class ApiResponse {
     private ArrayList<StatsEntity> stat;
     private Integer cw;
 
+    public ApiResponse(){
+
+    }
+
     public ApiResponse(ArrayList<SearchResult> resultList, String query, Integer k, ArrayList<StatsEntity> stat, Integer cw){
         this.resultList = resultList;
         this.query = new Query(query, k);

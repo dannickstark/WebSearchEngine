@@ -1,6 +1,6 @@
 package Crawler;
 
-import Indexer.Indexer;
+import Indexer.*;
 import com.shekhargulati.urlcleaner.UrlCleaner;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -33,7 +33,7 @@ public class SimpleCrawler {
     boolean multipleDomain;
     int threadID;
 
-    String hostName;
+    ArrayList<String> hostNames;
 
     public SimpleCrawler(CrawlerThread ct) {
         this.indexer = new Indexer();
@@ -44,7 +44,7 @@ public class SimpleCrawler {
         this.maxDepth = ct.crawler.maxDepth;
         this.maxDoc = ct.crawler.maxDoc;
         this.multipleDomain = ct.crawler.multipleDomain;
-        this.hostName = ct.crawler.hostName;
+        this.hostNames = ct.crawler.hostNames;
 
         this.que = ct.crawler.que;
         this.visited = ct.crawler.visited;
@@ -188,13 +188,15 @@ public class SimpleCrawler {
             return false;
 
         if(!this.multipleDomain){
-            String patternString = "https://?((W|w){3}.)?([a-zA-Z0-9]+\\.)?" + hostName + "(/.*)?";
+            String patternString = "https://?((W|w){3}.)?([a-zA-Z0-9]+\\.)?"
+                    + "(" + TextManipulator.joinWords(this.hostNames, "|") + ")"
+                    + "(/.*)?";
             Pattern pattern = Pattern.compile(patternString);
 
             Matcher matcher = pattern.matcher(link);
             boolean matches = matcher.matches();
 
-            if(!matches) return false;
+            return matches;
         }
         return true;
     }

@@ -22,9 +22,9 @@ public class Crawling {
         testURLS.add("https://rptu.de/ueber-die-rptu/organisation");
         testURLS.add("https://kai.informatik.uni-kl.de");
 
-        int maxDepth = 100;
-        int maxDoc = 50;
-        boolean multipleDomain = true;
+        int maxDepth = 5;
+        int maxDoc = 500;
+        boolean multipleDomain = false;
         int numberThreads = 3;
 
         for (int i = 0; i < args.length; i++) {

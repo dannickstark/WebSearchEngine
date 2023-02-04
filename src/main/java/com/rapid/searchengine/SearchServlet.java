@@ -27,9 +27,10 @@ public class SearchServlet extends HttpServlet {
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        String query = request.getParameter("q");
+        String query = request.getParameter("query");
         String ipAddress = request.getRemoteAddr();
         String lang = request.getParameter("language");
+        String type = request.getParameter("type");
 
         RateLimiter rateLimiter = rateLimiters.get(ipAddress);
 
@@ -48,23 +49,32 @@ public class SearchServlet extends HttpServlet {
                 lang = getLanguage(request);
             }
 
+            if(type == null){
+                type = "documents";
+            }
+
             long startTime = System.nanoTime();
-            Recolter rec = db.search(query, 20, lang);
-            ArrayList<SearchResult> results = rec.results;
+            Recolter rec = db.search(query, 20, lang, type);
+
+            if(type.equals("images")){
+                request.setAttribute("imageResults", rec.imageResults);
+            } else {
+                request.setAttribute("results", rec.results);
+            }
+
             long estimatedTime = System.nanoTime() - startTime;
             long elapsedTime = estimatedTime / 1000000000;
 
-
-            String alternativeQ = db.checkQuerySpelling(query);
+            String alternativeQ = db.checkQuerySpelling(query, lang, type);
             if(alternativeQ != query){
                 request.setAttribute("alternativeQ", alternativeQ);
             }
 
             request.setAttribute("query", query);
             request.setAttribute("language", lang);
-            request.setAttribute("results", results);
             request.setAttribute("elapsedTime", elapsedTime);
             request.setAttribute("isInNetwork", isInNetwork);
+            request.setAttribute("type", type);
             this.getServletContext().getRequestDispatcher("/Search.jsp").forward(request, response);
         } else {
             // Rate limit exceeded, return error response

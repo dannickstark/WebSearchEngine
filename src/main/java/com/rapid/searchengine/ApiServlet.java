@@ -34,6 +34,7 @@ public class ApiServlet extends HttpServlet {
         String query = request.getParameter("query");
         String k = request.getParameter("k");
         String lang = request.getParameter("language");
+        String score = request.getParameter("score");
         String ipAddress = request.getRemoteAddr();
 
         RateLimiter rateLimiter = rateLimiters.get(ipAddress);
@@ -47,36 +48,42 @@ public class ApiServlet extends HttpServlet {
         // Acquire a permit from the RateLimiter, blocking if necessary
         if (rateLimiter.tryAcquire()) {
             // Handle request
-            // Check if the request come within the same network
-            Boolean isInNetwork = Utilities.isSameNetwork(request);
+            String resultsJsonString;
 
-            Integer max = null;
-            if(k != null){
-                max = Integer.parseInt(k);
-            }
+            if(score != null && score.equals("1")){
+                // Check if the request come within the same network
+                Boolean isInNetwork = Utilities.isSameNetwork(request);
 
-            Recolter rec = db.search(query, max, lang);
-            ArrayList<SearchResult> results = rec.results;
-            ArrayList<StatsEntity> statsResults = rec.statsResults;
-
-            Integer cw = db.getNumberOfTerms();
-
-            // Remove confidentials documents
-            if(!isInNetwork){
-                ArrayList<SearchResult> collect = new ArrayList<>();
-
-                for(int i=0; i < results.size(); i++){
-                    SearchResult current = results.get(i);
-                    if(!current.getInternal()){
-                        collect.add(current);
-                    }
+                Integer max = null;
+                if(k != null){
+                    max = Integer.parseInt(k);
                 }
 
-                results = collect;
-            }
+                Recolter rec = db.search(query, max, lang, "documents");
+                ArrayList<SearchResult> results = rec.results;
+                ArrayList<StatsEntity> statsResults = rec.statsResults;
 
-            ApiResponse apiR = new ApiResponse(results, query, max, statsResults, cw);
-            String resultsJsonString = gson.toJson(apiR);
+                Integer cw = db.getNumberOfTerms();
+
+                // Remove confidentials documents
+                if(!isInNetwork){
+                    ArrayList<SearchResult> collect = new ArrayList<>();
+
+                    for(int i=0; i < results.size(); i++){
+                        SearchResult current = results.get(i);
+                        if(!current.getInternal()){
+                            collect.add(current);
+                        }
+                    }
+
+                    results = collect;
+                }
+
+                ApiResponse apiR = new ApiResponse(results, query, max, statsResults, cw);
+                resultsJsonString = gson.toJson(apiR);
+            } else {
+                resultsJsonString = gson.toJson(new ApiResponse());
+            }
 
             PrintWriter out = response.getWriter();
             response.setContentType("application/json");

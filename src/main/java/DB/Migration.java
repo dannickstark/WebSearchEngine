@@ -15,7 +15,9 @@ public class Migration {
         dropTables();
 
         createTable_documents() ;
+        createTable_images() ;
         createTable_features();
+        createTable_imageFeatures();
         createTable_links();
         createTable_globalVars();
         createTable_urls();
@@ -24,6 +26,8 @@ public class Migration {
     public void resetTables(){
         db.truncateTable("links");
         db.truncateTable("features");
+        db.truncateTable("imagefeatures");
+        db.truncateTable("images");
         db.truncateTable("documents");
         db.truncateTable("globalvars");
         db.truncateTable("urls");
@@ -32,6 +36,8 @@ public class Migration {
     public void dropTables(){
         db.deleteTable("links");
         db.deleteTable("features");
+        db.deleteTable("imagefeatures");
+        db.deleteTable("images");
         db.deleteTable("documents");
         db.deleteTable("globalvars");
         db.deleteTable("urls");
@@ -42,15 +48,32 @@ public class Migration {
             String query="""
                 create table documents (
                     docid SERIAL, 
-                    url varchar(200) UNIQUE NOT NULL, 
+                    url varchar(500) UNIQUE NOT NULL, 
                     title varchar(200),
-                    description varchar(200),
+                    description TEXT,
                     terms text[],
                     crawled_on_date date NOT NULL DEFAULT CURRENT_DATE, 
                     pagerank double precision,
                     internal BOOLEAN DEFAULT FALSE,
                     language varchar(200),
                     primary key(docid)
+                );
+            """;
+
+            return db.executeUpdateQuery(query);
+        }
+        return null;
+    }
+
+    public Integer createTable_images() throws SQLException {
+        if(!db.checkIfTableExist("images")){
+            String query="""
+                create table images (
+                    imageid SERIAL,
+                    url varchar(500),
+                    docid integer NOT NULL,
+                    foreign key(docid) references documents,
+                    primary key(imageid)
                 );
             """;
 
@@ -80,6 +103,26 @@ public class Migration {
         return null;
     }
 
+    public Integer createTable_imageFeatures() throws SQLException {
+        if(!db.checkIfTableExist("imagefeatures")){
+            String query="""
+                        create table imagefeatures (
+                            featid SERIAL, 
+                            docid integer NOT NULL, 
+                            imageid integer NOT NULL, 
+                            term varchar(200) NOT NULL, 
+                            score double precision,
+                            primary key(featid),
+                            foreign key(docid) references documents,
+                            foreign key(imageid) references images
+                        );
+                    """;
+
+            return db.executeUpdateQuery(query);
+        }
+        return null;
+    }
+
     public Integer createTable_links() throws SQLException {
         if(!db.checkIfTableExist("links")){
             String query="""
@@ -87,7 +130,7 @@ public class Migration {
                             linkid SERIAL, 
                             from_docid integer NOT NULL, 
                             to_docid integer, 
-                            url varchar(200) NOT NULL, 
+                            url varchar(500) NOT NULL, 
                             primary key(linkid),
                             foreign key(from_docid) references documents,
                             foreign key(to_docid) references documents
@@ -104,7 +147,7 @@ public class Migration {
             String query="""
                         create table urls (
                             urlid SERIAL, 
-                            url varchar(200) UNIQUE NOT NULL, 
+                            url varchar(500) UNIQUE NOT NULL, 
                             visited BOOLEAN NOT NULL DEFAULT TRUE,
                             primary key(urlid)
                         );

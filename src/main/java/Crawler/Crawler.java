@@ -6,10 +6,14 @@ import DB.Entities.LinkEntity;
 import DB.Entities.UrlEntity;
 import com.shekhargulati.urlcleaner.UrlCleaner;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Crawler {
     public volatile DB db;
@@ -23,7 +27,7 @@ public class Crawler {
     public volatile Queue<String> que;
     public volatile HashMap<String, Integer> levelMap;
 
-    public String hostName;
+    public ArrayList<String> hostNames;
 
     public volatile Object o1, o2, o3, o4, o5;
 
@@ -70,7 +74,15 @@ public class Crawler {
             this.que = new LinkedList<>(urlSet);
         }
 
-        this.hostName = UrlCleaner.normalizeUrl(this.urlSet.get(0)).split("/")[2];
+        // Collect all the hostnames from the initials urls
+        this.hostNames = new ArrayList<>();
+        for(int i=0; i < this.urlSet.size(); i++){
+            String hostName = extractDomain(UrlCleaner.normalizeUrl(this.urlSet.get(i)));
+
+            if(!this.hostNames.contains(hostName)){
+                this.hostNames.add(hostName);
+            }
+        }
 
         for(String link : this.urlSet){
             this.levelMap.put(UrlCleaner.normalizeUrl(link), 1);
@@ -113,5 +125,16 @@ public class Crawler {
             return varList.get(0).getContent();
         }
         return "Empty";
+    }
+
+    private static String extractDomain(String url) {
+        URI uri = null;
+        try {
+            uri = new URI(url);
+            String domain = uri.getHost();
+            return domain.startsWith("www.") ? domain.substring(4) : domain;
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
