@@ -24,5 +24,4 @@
     </div>
 </div>
 
-<script src="./js/index.js"></script>
 <%@ include file="sections/bottom.jsp" %>

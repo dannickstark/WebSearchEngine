@@ -47,6 +47,12 @@ public class Crawling {
             }
         }
 
+
+        System.out.println("------> Start process : ");
+        System.out.print(" --max-depth " + maxDepth);
+        System.out.print(" --max-doc " + maxDoc);
+        System.out.print(" --multiple-domain " + multipleDomain);
+        System.out.print(" --number-threads " + numberThreads);
         Crawler cr = new Crawler(testURLS, maxDepth, maxDoc, multipleDomain, numberThreads);
     }
 }

@@ -68,16 +68,17 @@
     <c:choose>
         <c:when test="${type == 'images'}">
             <div class="flex flex-wrap gap-4 mx-auto pt-2">
-                <c:forEach items="${imageResults}" var="result">
-                    <a href="<c:out value="${result.docUrl}">#</c:out>" class="card-link" target="_blank">
-                        <div class="flex flex-col w-52 gap-2 cursor-pointer">
-                            <div class="w-52 h-52 rounded-lg drop-shadow-lg hover:shadow-2xl bg-cover bg-center ..." style='background-image: url(<c:out value="${result.url}">#</c:out>)'></div>
+                <c:forEach items="${imageResults}" var="result" varStatus="loop">
+                    <div class="flex flex-col w-52 gap-2 cursor-pointer">
+                        <div onclick="openModal();currentSlide(${loop.index})" class="w-52 h-52 rounded-lg drop-shadow-lg hover:shadow-2xl bg-cover bg-center ..." style='background-image: url(<c:out value="${result.url}">#</c:out>)'></div>
+
+                        <a href="<c:out value="${result.docUrl}">#</c:out>" class="card-link" target="_blank">
                             <div class="flex flex-col w-full">
                                 <span class="font-light text-sm text-cyan-600">Score: <span class="decoration-pink-500 truncate ..."><c:out value="${result.score}"></c:out></span></span>
                                 <span class="font-medium text-base text-sky-600 overline truncate ..."><c:out value="${result.docTitle}"></c:out></span>
                             </div>
-                        </div>
-                    </a>
+                        </a>
+                    </div>
                 </c:forEach>
             </div>
         </c:when>
@@ -87,7 +88,7 @@
                     <li class="list-group-item">
                         <div class="">
                             <div class="card-body">
-                                <h5 class="card-title font-medium text-sky-600">
+                                <h5 class="font-medium text-sky-600">
                                     <a href="<c:out value="${result.url}">#</c:out>" class="text-lg text-cyan-800" target="_blank">
                                         <c:out value="${result.title}">...</c:out>
                                     </a>
@@ -121,5 +122,8 @@
     </c:choose>
 
 </main>
+
 <%@ include file="sections/footer.jsp" %>
+
+<script src="./js/index.js"></script>
 <%@ include file="sections/bottom.jsp" %>

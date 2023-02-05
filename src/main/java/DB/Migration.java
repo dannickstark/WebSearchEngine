@@ -21,6 +21,9 @@ public class Migration {
         createTable_links();
         createTable_globalVars();
         createTable_urls();
+
+        System.out.println("------> END OF MIGRATION");
+        System.exit(0);
     }
 
     public void resetTables(){

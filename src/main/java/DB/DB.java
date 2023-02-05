@@ -832,15 +832,15 @@ public class DB {
     }
 
     public static String findSmallSnippet(String bigText, List<String> keywords, int maxWords){
-        String result = "";
+        ArrayList<String> result = new ArrayList<>();
 
         for(String word : keywords){
             ArrayList<String> dummyList = new ArrayList<>();
             dummyList.add(word);
-            result += findSnippet(bigText, dummyList, maxWords) + "...";
+            result.add(findSnippet(bigText, dummyList, maxWords));
         }
 
-        return result;
+        return TextManipulator.joinWords(result, "...");
     }
 
     /**
@@ -859,9 +859,9 @@ public class DB {
         ArrayList<String> foundedKeys = new ArrayList<>(); // keywords found in the current snippet
         keywords = TextManipulator.convertToLower(keywords);
 
-        for (int i = 0; i < words.length - maxWords; i++) {
+        for (int i = 0; i < words.length; i++) {
             int start = i; // start index of the current snippet
-            int end = i + maxWords; // end index of the current snippet
+            int end = Math.min(i + maxWords, words.length); // end index of the current snippet
 
             for (int j = start; j < end; j++) {
                 for (String keyword : keywords) {
@@ -872,14 +872,17 @@ public class DB {
                     }
                 }
             }
+
             if (foundedKeys.size() > bestCount) {
                 bestStart = start;
                 bestEnd = end;
                 bestCount = foundedKeys.size();
             }
+
             if(foundedKeys.size() >= keywords.size()){
                 break;
             }
+
             foundedKeys = new ArrayList<>();
         }
         StringBuilder snippetBuilder = new StringBuilder();

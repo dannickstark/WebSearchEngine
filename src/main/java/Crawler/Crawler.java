@@ -112,6 +112,9 @@ public class Crawler {
         // Compute PageRank
         System.out.println("------> Compute PageRank");
         db.computePageRank();
+
+        System.out.println("------> END OF CRAWLING");
+        System.exit(0);
     }
 
     private void changeState(String state) {
